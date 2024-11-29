@@ -3,11 +3,17 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia.ReactiveUI;
+using Microsoft.Extensions.DependencyInjection;
+using ModernMusicPlayer.Data;
+using ModernMusicPlayer.Repositories;
+using ModernMusicPlayer.Services;
 
 namespace ModernMusicPlayer
 {
     class Program
     {
+        public static IServiceProvider? ServiceProvider { get; private set; }
+
         [STAThread]
         public static void Main(string[] args)
         {
@@ -15,6 +21,18 @@ namespace ModernMusicPlayer
             {
                 CheckLinuxDependencies();
             }
+
+            // Set up dependency injection
+            var services = new ServiceCollection();
+            
+            // Register services
+            services.AddDbContext<MusicPlayerDbContext>();
+            services.AddScoped<ITrackRepository, TrackRepository>();
+            services.AddScoped<ITagRepository, TagRepository>();
+            services.AddSingleton<AudioPlayerService>();
+            
+            // Build the service provider
+            ServiceProvider = services.BuildServiceProvider();
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
@@ -40,7 +58,6 @@ namespace ModernMusicPlayer
             };
 
             bool vlcFound = Array.Exists(vlcPaths, File.Exists);
-
             if (!vlcFound)
             {
                 Console.WriteLine("VLC is not installed. Please install VLC and libvlc-dev packages.");

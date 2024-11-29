@@ -1,23 +1,56 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Microsoft.Extensions.DependencyInjection;
+using ModernMusicPlayer.Data;
+using ModernMusicPlayer.Repositories;
+using ModernMusicPlayer.Services;
 
-namespace ModernMusicPlayer;
-
-public partial class App : Application
+namespace ModernMusicPlayer
 {
-    public override void Initialize()
+    public partial class App : Application
     {
-        AvaloniaXamlLoader.Load(this);
-    }
-
-    public override void OnFrameworkInitializationCompleted()
-    {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        public override void Initialize()
         {
-            desktop.MainWindow = new MainWindow();
+            AvaloniaXamlLoader.Load(this);
         }
 
-        base.OnFrameworkInitializationCompleted();
+        public override void OnFrameworkInitializationCompleted()
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && Program.ServiceProvider != null)
+            {
+                // Get required services
+                var dbContext = Program.ServiceProvider.GetRequiredService<MusicPlayerDbContext>();
+                var trackRepository = Program.ServiceProvider.GetRequiredService<ITrackRepository>();
+                var tagRepository = Program.ServiceProvider.GetRequiredService<ITagRepository>();
+                var audioPlayer = Program.ServiceProvider.GetRequiredService<AudioPlayerService>();
+
+                // Create main view model with dependencies
+                var mainViewModel = new MainViewModel(
+                    audioPlayer,
+                    trackRepository,
+                    tagRepository
+                );
+
+                // Create and configure main window
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = mainViewModel
+                };
+
+                // Handle application shutdown
+                desktop.Exit += (s, e) =>
+                {
+                    mainViewModel?.Dispose();
+                    if (Program.ServiceProvider is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                };
+            }
+
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }

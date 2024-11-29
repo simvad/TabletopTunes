@@ -1,45 +1,40 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
+using ModernMusicPlayer.Services;
+using ModernMusicPlayer.Repositories;
 
 namespace ModernMusicPlayer
 {
-    public partial class MainWindow : ReactiveWindow<MainViewModel>
+    public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
-        }
-
-        private void ProgressSlider_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property.Name == "Value" && DataContext is MainViewModel vm && sender is Slider slider)
-            {
-                var value = slider.Value;
-                if (!double.IsNaN(value))
-                {
-                    vm.SeekCommand.Execute(value);
-                }
-            }
-        }
-
-        private void VolumeSlider_PropertyChanged(object? sender, AvaloniaPropertyChangedEventArgs e)
-        {
-            if (e.Property.Name == "Value" && DataContext is MainViewModel vm && sender is Slider slider)
-            {
-                var value = slider.Value;
-                if (!double.IsNaN(value))
-                {
-                    vm.VolumeCommand.Execute(value);
-                }
-            }
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        private void ProgressSlider_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+        {
+            if (sender is Slider slider && 
+                DataContext is MainViewModel viewModel && 
+                viewModel.SeekCommand != null)
+            {
+                viewModel.SeekCommand.Execute(slider.Value);
+            }
+        }
+        private void VolumeSlider_PropertyChanged(object? sender, Avalonia.AvaloniaPropertyChangedEventArgs e)
+        {
+            if (sender is Slider slider && 
+                DataContext is MainViewModel viewModel &&
+                viewModel.VolumeCommand != null)
+            {
+                viewModel.VolumeCommand.Execute(slider.Value);
+            }
         }
     }
 }

@@ -3,84 +3,31 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
+using System.Threading.Tasks;
 using ReactiveUI;
 using ModernMusicPlayer.Services;
-using System.Threading.Tasks;
+using ModernMusicPlayer.Repositories;
+using ModernMusicPlayer.Entities;
+using ModernMusicPlayer.Commands;
 
 namespace ModernMusicPlayer
 {
-    public class Track
-    {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-        public string Title { get; set; } = "Untitled Track";
-        public string Url { get; set; } = string.Empty;
-        public List<string> Tags { get; set; } = new List<string>();
-        public string AudioPath { get; set; } = string.Empty;
-    }
-
-    public class RelayCommand : ICommand
-    {
-        private readonly Action _execute;
-        private readonly Func<bool>? _canExecute;
-
-        public RelayCommand(Action execute, Func<bool>? canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler? CanExecuteChanged;
-
-        protected virtual void OnCanExecuteChanged()
-        {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
-
-        public void Execute(object? parameter) => _execute();
-    }
-
-    public class RelayCommand<T> : ICommand
-    {
-        private readonly Action<T> _execute;
-        private readonly Func<T, bool>? _canExecute;
-
-        public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
-        {
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-
-        public event EventHandler? CanExecuteChanged;
-
-        protected virtual void OnCanExecuteChanged()
-        {
-            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public bool CanExecute(object? parameter) =>
-            parameter is T typedParameter && (_canExecute?.Invoke(typedParameter) ?? true);
-
-        public void Execute(object? parameter)
-        {
-            if (parameter is T typedParameter)
-            {
-                _execute(typedParameter);
-            }
-        }
-    }
-
     public class MainViewModel : ReactiveObject, IDisposable
     {
         private readonly AudioPlayerService _audioPlayer;
+        private readonly ITrackRepository _trackRepository;
+        private readonly ITagRepository _tagRepository;
         
         // Master list of all tracks
-        private ObservableCollection<Track> _allTracks;
+        private ObservableCollection<TrackEntity> _allTracks;
         
         // Filtered view for display
-        private ReadOnlyObservableCollection<Track> _displayedTracks;
-        public ReadOnlyObservableCollection<Track> DisplayedTracks => _displayedTracks;
+        private ReadOnlyObservableCollection<TrackEntity> _displayedTracks;
+        public ReadOnlyObservableCollection<TrackEntity> DisplayedTracks => _displayedTracks;
+
+        // Available tags
+        private ObservableCollection<TagViewModel> _availableTags;
+        public ObservableCollection<TagViewModel> AvailableTags => _availableTags;
 
         private string _searchQuery = "";
         public string SearchQuery
@@ -93,8 +40,8 @@ namespace ModernMusicPlayer
             }
         }
 
-        private Track? _currentTrack;
-        public Track? CurrentTrack
+        private TrackEntity? _currentTrack;
+        public TrackEntity? CurrentTrack
         {
             get => _currentTrack;
             set => this.RaiseAndSetIfChanged(ref _currentTrack, value);
@@ -156,30 +103,33 @@ namespace ModernMusicPlayer
             private set => this.RaiseAndSetIfChanged(ref _duration, value);
         }
 
-public ICommand OpenSettingsCommand { get; private set; } = null!;
-public ICommand CloseSettingsCommand { get; private set; } = null!;
-public ICommand OpenAddTrackCommand { get; private set; } = null!;
-public ICommand CloseAddTrackCommand { get; private set; } = null!;
-public ICommand PlayTrackCommand { get; private set; } = null!;
-public ICommand AddTrackCommand { get; private set; } = null!;
-public ICommand PlayPauseCommand { get; private set; } = null!;
-public ICommand StopCommand { get; private set; } = null!;
-public ICommand SeekCommand { get; private set; } = null!;
-public ICommand VolumeCommand { get; private set; } = null!;
+        public ICommand? OpenSettingsCommand { get; private set; }
+        public ICommand? CloseSettingsCommand { get; private set; }
+        public ICommand? OpenAddTrackCommand { get; private set; }
+        public ICommand? CloseAddTrackCommand { get; private set; }
+        public ICommand? PlayTrackCommand { get; private set; }
+        public ICommand? AddTrackCommand { get; private set; }
+        public ICommand? PlayPauseCommand { get; private set; }
+        public ICommand? StopCommand { get; private set; }
+        public ICommand? SeekCommand { get; private set; }
+        public ICommand? VolumeCommand { get; private set; }
 
-        public MainViewModel()
+        public MainViewModel(
+            AudioPlayerService audioPlayer,
+            ITrackRepository trackRepository,
+            ITagRepository tagRepository)
         {
-            _audioPlayer = new AudioPlayerService();
+            _audioPlayer = audioPlayer;
+            _trackRepository = trackRepository;
+            _tagRepository = tagRepository;
             
-            // Initialize master list
-            _allTracks = new ObservableCollection<Track>
-            {
-                new Track { Title = "Sample Track 1", Tags = new List<string> { "rock", "alternative" } },
-                new Track { Title = "Sample Track 2", Tags = new List<string> { "electronic", "dance" } }
-            };
+            // Initialize collections
+            _allTracks = new ObservableCollection<TrackEntity>();
+            _availableTags = new ObservableCollection<TagViewModel>();
+            _displayedTracks = new ReadOnlyObservableCollection<TrackEntity>(new ObservableCollection<TrackEntity>());
 
-            // Initial filter setup
-            _displayedTracks = new ReadOnlyObservableCollection<Track>(new ObservableCollection<Track>(_allTracks));
+            // Load initial data
+            _ = LoadDataAsync();
 
             // Wire up audio player events
             _audioPlayer.PlaybackStarted += (s, e) => 
@@ -191,11 +141,53 @@ public ICommand VolumeCommand { get; private set; } = null!;
             _audioPlayer.PositionChanged += (s, position) => CurrentPosition = position;
             _audioPlayer.ErrorOccurred += (s, error) => 
             {
-                // TODO: Show error in UI
                 Console.WriteLine($"Playback error: {error}");
             };
 
             InitializeCommands();
+        }
+
+        private async Task LoadDataAsync()
+        {
+            try
+            {
+                // Load tracks from database
+                var tracks = await _trackRepository.GetAllAsync();
+                _allTracks = new ObservableCollection<TrackEntity>(tracks);
+                
+                // Load and update available tags
+                await RefreshTagsAsync();
+                
+                // Initial filter
+                UpdateFilteredTracks();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading data: {ex.Message}");
+            }
+        }
+
+        private async Task RefreshTagsAsync()
+        {
+            try
+            {
+                var tags = await _tagRepository.GetAllTagsAsync();
+                _availableTags.Clear();
+                foreach (var tag in tags)
+                {
+                    _availableTags.Add(new TagViewModel
+                    {
+                        Id = tag.Id,
+                        Name = tag.Name,
+                        TrackCount = await _tagRepository.GetTrackCountForTagAsync(tag.Id)
+                    });
+                }
+                this.RaisePropertyChanged(nameof(AvailableTags));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error refreshing tags: {ex.Message}");
+            }
         }
 
         private void InitializeCommands()
@@ -205,7 +197,7 @@ public ICommand VolumeCommand { get; private set; } = null!;
             OpenAddTrackCommand = new RelayCommand(() => IsAddTrackOpen = true);
             CloseAddTrackCommand = new RelayCommand(() => IsAddTrackOpen = false);
 
-            PlayTrackCommand = new RelayCommand<Track>(async track =>
+            PlayTrackCommand = new RelayCommand<TrackEntity>(async track =>
             {
                 if (track?.Url != null)
                 {
@@ -213,6 +205,18 @@ public ICommand VolumeCommand { get; private set; } = null!;
                     try
                     {
                         await _audioPlayer.PlayFromYoutubeUrl(track.Url);
+                        
+                        // Update play statistics in database
+                        await _trackRepository.IncrementPlayCountAsync(track.Id);
+                        await _trackRepository.UpdateLastPlayedAsync(track.Id);
+                        
+                        // Refresh the track data
+                        var updatedTrack = await _trackRepository.GetByIdAsync(track.Id);
+                        if (updatedTrack != null)
+                        {
+                            var index = _allTracks.IndexOf(track);
+                            _allTracks[index] = updatedTrack;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -228,21 +232,43 @@ public ICommand VolumeCommand { get; private set; } = null!;
                     try
                     {
                         var title = await _audioPlayer.GetVideoTitle(NewTrackUrl);
-                        var newTrack = new Track
+                        
+                        // Create new track
+                        var newTrack = new TrackEntity
                         {
                             Title = title,
                             Url = NewTrackUrl,
-                            Tags = NewTrackTags.Split(',')
-                                .Select(t => t.Trim())
-                                .Where(t => !string.IsNullOrEmpty(t))
-                                .ToList()
+                            CreatedAt = DateTime.UtcNow
                         };
 
-                        _allTracks.Add(newTrack);  // Add to master list
+                        // Process tags
+                        var tagNames = NewTrackTags.Split(',')
+                            .Select(t => t.Trim())
+                            .Where(t => !string.IsNullOrEmpty(t));
+
+                        foreach (var tagName in tagNames)
+                        {
+                            var tag = await _tagRepository.GetOrCreateTagAsync(tagName);
+                            newTrack.TrackTags.Add(new TrackTag 
+                            { 
+                                Track = newTrack,
+                                Tag = tag,
+                                AddedAt = DateTime.UtcNow
+                            });
+                        }
+
+                        // Save to database
+                        var savedTrack = await _trackRepository.AddAsync(newTrack);
+                        
+                        // Update UI
+                        _allTracks.Add(savedTrack);
+                        await RefreshTagsAsync();
+                        UpdateFilteredTracks();
+
+                        // Reset UI state
                         IsAddTrackOpen = false;
                         NewTrackUrl = "";
                         NewTrackTags = "";
-                        UpdateFilteredTracks();  // Refresh the filter
                     }
                     catch (Exception ex)
                     {
@@ -274,20 +300,19 @@ public ICommand VolumeCommand { get; private set; } = null!;
 
         private void UpdateFilteredTracks()
         {
-            IEnumerable<Track> filtered = _allTracks;
+            IEnumerable<TrackEntity> filtered = _allTracks;
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                // For now, simple contains search. You can enhance this later with logical operators
-                filtered = _allTracks.Where(track =>
-                    track.Title.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ||
-                    track.Tags.Any(tag => tag.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase))
+                var query = SearchQuery.ToLower();
+                filtered = filtered.Where(track =>
+                    track.Title.ToLower().Contains(query) ||
+                    track.TrackTags.Any(tt => tt.Tag.Name.ToLower().Contains(query))
                 );
             }
 
-            // Create a new ReadOnlyObservableCollection for the filtered results
-            _displayedTracks = new ReadOnlyObservableCollection<Track>(
-                new ObservableCollection<Track>(filtered)
+            _displayedTracks = new ReadOnlyObservableCollection<TrackEntity>(
+                new ObservableCollection<TrackEntity>(filtered)
             );
             
             this.RaisePropertyChanged(nameof(DisplayedTracks));
@@ -296,6 +321,20 @@ public ICommand VolumeCommand { get; private set; } = null!;
         public void Dispose()
         {
             _audioPlayer?.Dispose();
+        }
+    }
+
+    public class TagViewModel : ReactiveObject
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int TrackCount { get; set; }
+        
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set => this.RaiseAndSetIfChanged(ref _isSelected, value);
         }
     }
 }
