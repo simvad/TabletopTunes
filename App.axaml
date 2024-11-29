@@ -1,0 +1,14 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:ModernMusicPlayer.Converters"
+             x:Class="ModernMusicPlayer.App"
+             RequestedThemeVariant="Dark">
+             
+    <Application.Resources>
+        <converters:BoolToPlayPauseConverter x:Key="BoolToPlayPauseConverter"/>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+</Application>
