@@ -18,6 +18,8 @@ namespace ModernMusicPlayer
         private readonly AudioPlayerService _audioPlayer;
         private readonly ITrackRepository _trackRepository;
         private readonly ITagRepository _tagRepository;
+        private readonly Random _random = new();
+        private List<TrackEntity> _playQueue = new();
         
         // Master list of all tracks
         private ObservableCollection<TrackEntity> _allTracks;
@@ -74,6 +76,13 @@ namespace ModernMusicPlayer
         {
             get => _isEditTagsOpen;
             set => this.RaiseAndSetIfChanged(ref _isEditTagsOpen, value);
+        }
+
+        private bool _isRandomLoopActive;
+        public bool IsRandomLoopActive
+        {
+            get => _isRandomLoopActive;
+            private set => this.RaiseAndSetIfChanged(ref _isRandomLoopActive, value);
         }
 
         private string _newTrackUrl = "";
@@ -157,13 +166,20 @@ namespace ModernMusicPlayer
             // Load initial data
             _ = LoadDataAsync();
 
-            // Wire up audio player events
             _audioPlayer.PlaybackStarted += (s, e) => 
             {
                 IsPlaying = true;
                 Duration = _audioPlayer.Duration;
             };
-            _audioPlayer.PlaybackFinished += (s, e) => IsPlaying = false;
+            _audioPlayer.PlaybackFinished += async (s, e) => 
+            {
+                IsPlaying = false;
+                if (IsRandomLoopActive)
+                {
+                    await Task.Delay(500); // Small delay to ensure clean transition
+                    await PlayNextInQueue();
+                }
+            };
             _audioPlayer.PositionChanged += (s, position) => CurrentPosition = position;
             _audioPlayer.ErrorOccurred += (s, error) => 
             {
@@ -173,18 +189,97 @@ namespace ModernMusicPlayer
             InitializeCommands();
         }
 
+        public async Task StartRandomPlayback()
+        {
+            var filteredTracks = DisplayedTracks.ToList();
+            if (!filteredTracks.Any())
+                return;
+
+            _playQueue = filteredTracks.ToList();
+            ShuffleQueue();
+            IsRandomLoopActive = true;
+
+            if (_playQueue.Any())
+            {
+                var firstTrack = _playQueue[0];
+                _playQueue.RemoveAt(0);
+                await PlayTrack(firstTrack);
+            }
+        }
+
+        private void ShuffleQueue()
+        {
+            int n = _playQueue.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = _random.Next(n + 1);
+                TrackEntity temp = _playQueue[k];
+                _playQueue[k] = _playQueue[n];
+                _playQueue[n] = temp;
+            }
+        }
+
+        private async Task PlayNextInQueue()
+        {
+            if (!_playQueue.Any() || !IsRandomLoopActive)
+            {
+                IsRandomLoopActive = false;
+                return;
+            }
+
+            var nextTrack = _playQueue[0];
+            _playQueue.RemoveAt(0);
+
+            // If queue is empty, reshuffle all tracks
+            if (!_playQueue.Any() && IsRandomLoopActive)
+            {
+                _playQueue = DisplayedTracks.ToList();
+                ShuffleQueue();
+            }
+
+            await PlayTrack(nextTrack);
+        }
+
+        private async Task PlayTrack(TrackEntity track)
+        {
+            if (track?.Url != null)
+            {
+                CurrentTrack = track;
+                try
+                {
+                    await _audioPlayer.PlayFromYoutubeUrl(track.Url);
+                    
+                    // Update play statistics in database
+                    await _trackRepository.IncrementPlayCountAsync(track.Id);
+                    await _trackRepository.UpdateLastPlayedAsync(track.Id);
+                    
+                    // Refresh the track data
+                    var updatedTrack = await _trackRepository.GetByIdAsync(track.Id);
+                    if (updatedTrack != null)
+                    {
+                        var index = _allTracks.IndexOf(track);
+                        _allTracks[index] = updatedTrack;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error playing track: {ex.Message}");
+                    if (IsRandomLoopActive)
+                    {
+                        await PlayNextInQueue(); // Skip to next track if current one fails
+                    }
+                }
+            }
+        }
+
         private async Task LoadDataAsync()
         {
             try
             {
-                // Load tracks from database
                 var tracks = await _trackRepository.GetAllAsync();
                 _allTracks = new ObservableCollection<TrackEntity>(tracks);
-                
-                // Load and update available tags
                 await RefreshTagsAsync();
-                
-                // Initial filter
                 UpdateFilteredTracks();
             }
             catch (Exception ex)
@@ -246,10 +341,7 @@ namespace ModernMusicPlayer
                 {
                     try
                     {
-                        // Clear existing tags
                         EditingTrack.TrackTags.Clear();
-
-                        // Add new tags
                         var tagNames = EditingTags.Split(',')
                             .Select(t => t.Trim())
                             .Where(t => !string.IsNullOrEmpty(t));
@@ -265,12 +357,10 @@ namespace ModernMusicPlayer
                             });
                         }
 
-                        // Save changes
                         await _trackRepository.UpdateAsync(EditingTrack);
                         await RefreshTagsAsync();
                         UpdateFilteredTracks();
 
-                        // Close dialog
                         IsEditTagsOpen = false;
                         EditingTrack = null;
                         EditingTags = "";
@@ -293,27 +383,11 @@ namespace ModernMusicPlayer
             {
                 if (track?.Url != null)
                 {
-                    CurrentTrack = track;
-                    try
-                    {
-                        await _audioPlayer.PlayFromYoutubeUrl(track.Url);
-                        
-                        // Update play statistics in database
-                        await _trackRepository.IncrementPlayCountAsync(track.Id);
-                        await _trackRepository.UpdateLastPlayedAsync(track.Id);
-                        
-                        // Refresh the track data
-                        var updatedTrack = await _trackRepository.GetByIdAsync(track.Id);
-                        if (updatedTrack != null)
-                        {
-                            var index = _allTracks.IndexOf(track);
-                            _allTracks[index] = updatedTrack;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error playing track: {ex.Message}");
-                    }
+                    // Stop any current random playback
+                    IsRandomLoopActive = false;
+                    _playQueue.Clear();
+                    
+                    await PlayTrack(track);
                 }
             });
 
@@ -325,7 +399,6 @@ namespace ModernMusicPlayer
                     {
                         var title = await _audioPlayer.GetVideoTitle(NewTrackUrl);
                         
-                        // Create new track
                         var newTrack = new TrackEntity
                         {
                             Title = title,
@@ -333,7 +406,6 @@ namespace ModernMusicPlayer
                             CreatedAt = DateTime.UtcNow
                         };
 
-                        // Process tags
                         var tagNames = NewTrackTags.Split(',')
                             .Select(t => t.Trim())
                             .Where(t => !string.IsNullOrEmpty(t));
@@ -349,15 +421,11 @@ namespace ModernMusicPlayer
                             });
                         }
 
-                        // Save to database
                         var savedTrack = await _trackRepository.AddAsync(newTrack);
-                        
-                        // Update UI
                         _allTracks.Add(savedTrack);
                         await RefreshTagsAsync();
                         UpdateFilteredTracks();
 
-                        // Reset UI state
                         IsAddTrackOpen = false;
                         NewTrackUrl = "";
                         NewTrackTags = "";
@@ -377,7 +445,12 @@ namespace ModernMusicPlayer
                     _audioPlayer.Resume();
             });
 
-            StopCommand = new RelayCommand(() => _audioPlayer.Stop());
+            StopCommand = new RelayCommand(() => 
+            {
+                _audioPlayer.Stop();
+                IsRandomLoopActive = false;
+                _playQueue.Clear();
+            });
 
             SeekCommand = new RelayCommand<double>(position =>
             {
@@ -404,6 +477,25 @@ namespace ModernMusicPlayer
             );
             
             this.RaisePropertyChanged(nameof(DisplayedTracks));
+
+            // If we're in random loop mode and current track isn't in filtered set
+            if (IsRandomLoopActive && CurrentTrack != null)
+            {
+                if (!filtered.Contains(CurrentTrack))
+                {
+                    // Stop current track and move to next track that matches new filter
+                    _audioPlayer.Stop();
+                    _playQueue = filtered.ToList();
+                    ShuffleQueue();
+                    _ = PlayNextInQueue();
+                }
+                else
+                {
+                    // Just update the queue with new filtered tracks
+                    _playQueue = filtered.Where(t => t != CurrentTrack).ToList();
+                    ShuffleQueue();
+                }
+            }
         }
 
         public void Dispose()
