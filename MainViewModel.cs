@@ -69,6 +69,13 @@ namespace ModernMusicPlayer
             set => this.RaiseAndSetIfChanged(ref _isAddTrackOpen, value);
         }
 
+        private bool _isEditTagsOpen = false;
+        public bool IsEditTagsOpen
+        {
+            get => _isEditTagsOpen;
+            set => this.RaiseAndSetIfChanged(ref _isEditTagsOpen, value);
+        }
+
         private string _newTrackUrl = "";
         public string NewTrackUrl
         {
@@ -81,6 +88,20 @@ namespace ModernMusicPlayer
         {
             get => _newTrackTags;
             set => this.RaiseAndSetIfChanged(ref _newTrackTags, value);
+        }
+
+        private TrackEntity? _editingTrack;
+        public TrackEntity? EditingTrack
+        {
+            get => _editingTrack;
+            set => this.RaiseAndSetIfChanged(ref _editingTrack, value);
+        }
+
+        private string _editingTags = "";
+        public string EditingTags
+        {
+            get => _editingTags;
+            set => this.RaiseAndSetIfChanged(ref _editingTags, value);
         }
 
         private bool _isPlaying;
@@ -114,6 +135,10 @@ namespace ModernMusicPlayer
         public ICommand? StopCommand { get; private set; }
         public ICommand? SeekCommand { get; private set; }
         public ICommand? VolumeCommand { get; private set; }
+        public ICommand? EditTrackTagsCommand { get; private set; }
+        public ICommand? DeleteTrackCommand { get; private set; }
+        public ICommand? SaveTagsCommand { get; private set; }
+        public ICommand? CloseEditTagsCommand { get; private set; }
 
         public MainViewModel(
             AudioPlayerService audioPlayer,
@@ -197,6 +222,72 @@ namespace ModernMusicPlayer
             CloseSettingsCommand = new RelayCommand(() => IsSettingsOpen = false);
             OpenAddTrackCommand = new RelayCommand(() => IsAddTrackOpen = true);
             CloseAddTrackCommand = new RelayCommand(() => IsAddTrackOpen = false);
+
+            EditTrackTagsCommand = new RelayCommand<TrackEntity>(track =>
+            {
+                EditingTrack = track;
+                EditingTags = string.Join(", ", track?.TrackTags.Select(tt => tt.Tag.Name) ?? Array.Empty<string>());
+                IsEditTagsOpen = true;
+            });
+
+            DeleteTrackCommand = new RelayCommand<TrackEntity>(async track =>
+            {
+                if (track != null)
+                {
+                    await _trackRepository.DeleteAsync(track.Id);
+                    _allTracks.Remove(track);
+                    UpdateFilteredTracks();
+                }
+            });
+
+            SaveTagsCommand = new RelayCommand(async () =>
+            {
+                if (EditingTrack != null)
+                {
+                    try
+                    {
+                        // Clear existing tags
+                        EditingTrack.TrackTags.Clear();
+
+                        // Add new tags
+                        var tagNames = EditingTags.Split(',')
+                            .Select(t => t.Trim())
+                            .Where(t => !string.IsNullOrEmpty(t));
+
+                        foreach (var tagName in tagNames)
+                        {
+                            var tag = await _tagRepository.GetOrCreateTagAsync(tagName);
+                            EditingTrack.TrackTags.Add(new TrackTag 
+                            { 
+                                Track = EditingTrack,
+                                Tag = tag,
+                                AddedAt = DateTime.UtcNow
+                            });
+                        }
+
+                        // Save changes
+                        await _trackRepository.UpdateAsync(EditingTrack);
+                        await RefreshTagsAsync();
+                        UpdateFilteredTracks();
+
+                        // Close dialog
+                        IsEditTagsOpen = false;
+                        EditingTrack = null;
+                        EditingTags = "";
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error updating tags: {ex.Message}");
+                    }
+                }
+            });
+
+            CloseEditTagsCommand = new RelayCommand(() =>
+            {
+                IsEditTagsOpen = false;
+                EditingTrack = null;
+                EditingTags = "";
+            });
 
             PlayTrackCommand = new RelayCommand<TrackEntity>(async track =>
             {
