@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using ModernMusicPlayer.Data;
 using ModernMusicPlayer.Entities;
+using ModernMusicPlayer.Query;
 
 namespace ModernMusicPlayer.Repositories
 {

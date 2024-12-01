@@ -9,6 +9,7 @@ using ModernMusicPlayer.Services;
 using ModernMusicPlayer.Repositories;
 using ModernMusicPlayer.Entities;
 using ModernMusicPlayer.Commands;
+using ModernMusicPlayer.Query;
 
 namespace ModernMusicPlayer
 {
@@ -304,11 +305,7 @@ namespace ModernMusicPlayer
 
             if (!string.IsNullOrWhiteSpace(SearchQuery))
             {
-                var query = SearchQuery.ToLower();
-                filtered = filtered.Where(track =>
-                    track.Title.ToLower().Contains(query) ||
-                    track.TrackTags.Any(tt => tt.Tag.Name.ToLower().Contains(query))
-                );
+                filtered = filtered.AsQueryable().ApplyQuery(SearchQuery);
             }
 
             _displayedTracks = new ReadOnlyObservableCollection<TrackEntity>(
