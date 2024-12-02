@@ -1,9 +1,10 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;  // Add this line
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using ModernMusicPlayer.Services;
 using ModernMusicPlayer.Repositories;
+using ModernMusicPlayer.ViewModels;
 
 namespace ModernMusicPlayer
 {
@@ -19,11 +20,11 @@ namespace ModernMusicPlayer
             AvaloniaXamlLoader.Load(this);
         }
 
-        private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && DataContext is MainViewModel viewModel)
             {
-                await viewModel.StartRandomPlayback();
+                viewModel.SearchViewModel.RefreshDisplayedTracks();
             }
         }
 
@@ -31,9 +32,9 @@ namespace ModernMusicPlayer
         {
             if (sender is Slider slider && 
                 DataContext is MainViewModel viewModel && 
-                viewModel.SeekCommand != null)
+                viewModel.PlaybackViewModel.SeekCommand != null)
             {
-                viewModel.SeekCommand.Execute(slider.Value);
+                viewModel.PlaybackViewModel.SeekCommand.Execute(slider.Value);
             }
         }
 
@@ -41,9 +42,9 @@ namespace ModernMusicPlayer
         {
             if (sender is Slider slider && 
                 DataContext is MainViewModel viewModel &&
-                viewModel.VolumeCommand != null)
+                viewModel.PlaybackViewModel.VolumeCommand != null)
             {
-                viewModel.VolumeCommand.Execute(slider.Value);
+                viewModel.PlaybackViewModel.VolumeCommand.Execute(slider.Value);
             }
         }
     }

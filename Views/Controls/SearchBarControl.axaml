@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ModernMusicPlayer.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="50"
+             x:Class="ModernMusicPlayer.Views.Controls.SearchBarControl"
+             x:DataType="vm:SearchViewModel">
+    
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox Grid.Column="0" 
+                 Text="{Binding SearchQuery}" 
+                 Watermark="Search by title or use #tags... (e.g. '#rock &amp; #alternative' or '#rock | #jazz')"
+                 Margin="0,0,10,0"
+                 KeyDown="SearchBox_KeyDown"/>
+
+        <Button Grid.Column="1" 
+                Content="⚙️" 
+                Background="Transparent"
+                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).OpenSettingsCommand}"/>
+    </Grid>
+</UserControl>

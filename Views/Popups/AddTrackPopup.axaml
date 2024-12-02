@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ModernMusicPlayer.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="200"
+             x:Class="ModernMusicPlayer.Views.Popups.AddTrackPopup"
+             x:DataType="vm:TrackManagementViewModel">
+
+    <Border Background="{StaticResource SecondaryBackground}" 
+            Padding="20" 
+            CornerRadius="10">
+        <StackPanel Width="300">
+            <TextBlock Text="Add New Track" 
+                      Margin="0,0,0,10"
+                      FontSize="18"
+                      FontWeight="Bold"/>
+            <TextBox Text="{Binding NewTrackUrl}" 
+                     Watermark="YouTube URL"
+                     Margin="0,0,0,10"/>
+            <TextBox Text="{Binding NewTrackTags}" 
+                     Watermark="Tags (comma separated)"
+                     Margin="0,0,0,15"/>
+            <StackPanel Orientation="Horizontal" 
+                      HorizontalAlignment="Right">
+                <Button Content="Add" 
+                        Command="{Binding AddTrackCommand}"
+                        Margin="0,0,10,0"/>
+                <Button Content="Cancel" 
+                        Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).CloseAddTrackCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

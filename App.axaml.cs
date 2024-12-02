@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ModernMusicPlayer.Data;
 using ModernMusicPlayer.Repositories;
 using ModernMusicPlayer.Services;
+using ModernMusicPlayer.ViewModels;
 
 namespace ModernMusicPlayer
 {
@@ -25,12 +26,14 @@ namespace ModernMusicPlayer
                 var trackRepository = Program.ServiceProvider.GetRequiredService<ITrackRepository>();
                 var tagRepository = Program.ServiceProvider.GetRequiredService<ITagRepository>();
                 var audioPlayer = Program.ServiceProvider.GetRequiredService<AudioPlayerService>();
+                var sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
 
                 // Create main view model with dependencies
                 var mainViewModel = new MainViewModel(
                     audioPlayer,
                     trackRepository,
-                    tagRepository
+                    tagRepository,
+                    sessionService
                 );
 
                 // Create and configure main window

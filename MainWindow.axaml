@@ -2,8 +2,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:vm="clr-namespace:ModernMusicPlayer"
-        xmlns:entities="clr-namespace:ModernMusicPlayer.Entities"
+        xmlns:vm="clr-namespace:ModernMusicPlayer.ViewModels"
+        xmlns:controls="clr-namespace:ModernMusicPlayer.Views.Controls"
+        xmlns:popups="clr-namespace:ModernMusicPlayer.Views.Popups"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="ModernMusicPlayer.MainWindow"
         x:DataType="vm:MainViewModel"
@@ -42,148 +43,33 @@
     </Window.Styles>
 
     <Grid RowDefinitions="Auto,*,Auto" Background="{StaticResource PrimaryBackground}">
-        <!-- Top Search Bar and Settings -->
-        <Grid Grid.Row="0" Margin="10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBox Grid.Column="0" 
-         Text="{Binding SearchQuery}" 
-         Watermark="Search by title or use #tags... (e.g. '#rock &amp; #alternative' or '#rock | #jazz')"
-         Margin="0,0,10,0"
-         KeyDown="SearchBox_KeyDown"/>
-
-            <Button Grid.Column="1" 
-                    Content="⚙️" 
-                    Background="Transparent"
-                    Command="{Binding OpenSettingsCommand}"/>
+        <!-- Top Search Bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10">
+            <controls:SearchBarControl Grid.Column="0"
+                                     DataContext="{Binding}"/>
+            <Button Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Command="{Binding OpenSessionPanelCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <PathIcon Data="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 8a6 6 0 1 1 12 0A6 6 0 0 1 6 8zm2 10a3 3 0 0 0-3 3 1 1 0 1 1-2 0 5 5 0 0 1 5-5h8a5 5 0 0 1 5 5 1 1 0 1 1-2 0 3 3 0 0 0-3-3H8z"/>
+                    <TextBlock Text="Session"/>
+                </StackPanel>
+            </Button>
         </Grid>
 
         <!-- Track Grid -->
-        <ScrollViewer Grid.Row="1" 
-                     Background="{StaticResource SecondaryBackground}"
-                     Margin="0"
-                     Padding="10">
-            <ItemsControl ItemsSource="{Binding DisplayedTracks}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="entities:TrackEntity">
-                        <Button Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).PlayTrackCommand}"
-                                CommandParameter="{Binding}"
-                                Margin="5"
-                                Padding="10"
-                                Width="180"
-                                Height="100">
-                            <Button.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Edit Tags" 
-                                              Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).EditTrackTagsCommand}"
-                                              CommandParameter="{Binding}"/>
-                                    <MenuItem Header="Delete Track" 
-                                              Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).DeleteTrackCommand}"
-                                              CommandParameter="{Binding}"/>
-                                </ContextMenu>
-                            </Button.ContextMenu>
-                            <StackPanel>
-                                <TextBlock Text="{Binding Title}" 
-                                         TextTrimming="CharacterEllipsis"
-                                         TextWrapping="NoWrap"
-                                         MaxWidth="160"
-                                         FontWeight="Medium"/>
-                                <ItemsControl ItemsSource="{Binding TrackTags}" 
-                                            Margin="0,5,0,0">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#4A4A4A" 
-                                                    CornerRadius="3" 
-                                                    Padding="4,2" 
-                                                    Margin="0,0,4,4">
-                                                <TextBlock Text="{Binding Tag.Name}" 
-                                                         FontSize="10"/>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Button>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+        <controls:TrackGridControl Grid.Row="1" 
+                                 Background="{StaticResource SecondaryBackground}"
+                                 Margin="0"
+                                 Padding="10"
+                                 DataContext="{Binding}"/>
 
         <!-- Bottom Player Controls -->
-        <Grid Grid.Row="2" 
-              Background="{StaticResource SecondaryBackground}"
-              Height="80"
-              Margin="10">
-
-            <!-- Current Track Info -->
-            <Grid RowDefinitions="Auto,*">
-                <TextBlock Grid.Row="0" 
-                          Text="{Binding CurrentTrack.Title}" 
-                          FontWeight="Bold"
-                          TextTrimming="CharacterEllipsis"
-                          Foreground="{StaticResource TextColor}"
-                          Margin="0,0,0,10"/>
-                
-                <!-- Player Controls -->
-                <Grid Grid.Row="1" 
-                      ColumnDefinitions="Auto,Auto,*,Auto,Auto"
-                      VerticalAlignment="Center">
-                    
-                    <!-- Time -->
-                    <TextBlock Grid.Column="0"
-                              Text="{Binding CurrentPosition, StringFormat='{}{0:mm\\:ss}'}" 
-                              VerticalAlignment="Center"
-                              Foreground="{StaticResource TextColor}"
-                              Margin="0,0,10,0"/>
-                    
-                    <!-- Play/Pause -->
-                    <Button Grid.Column="1"
-                            Command="{Binding PlayPauseCommand}"
-                            Content="▶️"
-                            Width="40"
-                            Height="40"
-                            Margin="0,0,10,0"/>
-                    
-                    <!-- Progress Slider -->
-                    <Slider Grid.Column="2"
-                            Minimum="0"
-                            Maximum="{Binding Duration.TotalSeconds}"
-                            Value="{Binding CurrentPosition.TotalSeconds}"
-                            PropertyChanged="ProgressSlider_PropertyChanged"
-                            VerticalAlignment="Center"
-                            Margin="0,0,10,0"/>
-                    
-                    <!-- Volume Icon -->
-                    <TextBlock Grid.Column="3"
-                              Text="🔊" 
-                              VerticalAlignment="Center"
-                              Foreground="{StaticResource TextColor}"
-                              Margin="0,0,5,0"/>
-                    
-                    <!-- Volume Slider -->
-                    <Slider Grid.Column="4"
-                            Width="100"
-                            Minimum="0"
-                            Maximum="100"
-                            Value="100"
-                            PropertyChanged="VolumeSlider_PropertyChanged"
-                            VerticalAlignment="Center"/>
-                </Grid>
-            </Grid>
-        </Grid>
+        <controls:PlayerControlsControl Grid.Row="2" 
+                                      Background="{StaticResource SecondaryBackground}"
+                                      Height="80"
+                                      Margin="10"
+                                      DataContext="{Binding}"/>
 
         <!-- Floating Add Track Button -->
         <Button Grid.Row="1" 
@@ -197,107 +83,32 @@
                       HorizontalAlignment="Center"/>
         </Button>
 
-        <!-- Settings Popup -->
-        <Border Grid.Row="0" Grid.RowSpan="3" 
-                Background="Black" 
-                Opacity="0.5"
-                IsVisible="{Binding IsSettingsOpen}"/>
-        
-        <Grid Grid.Row="0" Grid.RowSpan="3" 
-              HorizontalAlignment="Center" 
-              VerticalAlignment="Center"
-              IsVisible="{Binding IsSettingsOpen}">
-            <Border Background="{StaticResource SecondaryBackground}" 
-                    Padding="20" 
-                    CornerRadius="10">
-                <StackPanel>
-                    <TextBlock Text="Settings" 
-                             Margin="0,0,0,10"
-                             FontSize="18"
-                             FontWeight="Bold"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                        <TextBlock Text="Fade Length (sec): " 
-                                 VerticalAlignment="Center"/>
-                        <NumericUpDown Value="{Binding FadeLength}"
-                                     Minimum="0"
-                                     Maximum="10"
-                                     Increment="0.5"
-                                     Width="100"/>
-                    </StackPanel>
-                    <Button Content="Close" 
-                            Command="{Binding CloseSettingsCommand}"
-                            HorizontalAlignment="Right"/>
-                </StackPanel>
-            </Border>
+        <!-- Popup Overlays -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsSettingsOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:SettingsPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding}"/>
         </Grid>
 
-        <!-- Add Track Popup -->
-        <Border Grid.Row="0" Grid.RowSpan="3" 
-                Background="Black" 
-                Opacity="0.5"
-                IsVisible="{Binding IsAddTrackOpen}"/>
-        
-        <Grid Grid.Row="0" Grid.RowSpan="3" 
-              HorizontalAlignment="Center" 
-              VerticalAlignment="Center"
-              IsVisible="{Binding IsAddTrackOpen}">
-            <Border Background="{StaticResource SecondaryBackground}" 
-                    Padding="20" 
-                    CornerRadius="10">
-                <StackPanel Width="300">
-                    <TextBlock Text="Add New Track" 
-                             Margin="0,0,0,10"
-                             FontSize="18"
-                             FontWeight="Bold"/>
-                    <TextBox Text="{Binding NewTrackUrl}" 
-                             Watermark="YouTube URL"
-                             Margin="0,0,0,10"/>
-                    <TextBox Text="{Binding NewTrackTags}" 
-                             Watermark="Tags (comma separated)"
-                             Margin="0,0,0,15"/>
-                    <StackPanel Orientation="Horizontal" 
-                              HorizontalAlignment="Right">
-                        <Button Content="Add" 
-                                Command="{Binding AddTrackCommand}"
-                                Margin="0,0,10,0"/>
-                        <Button Content="Cancel" 
-                                Command="{Binding CloseAddTrackCommand}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsAddTrackOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:AddTrackPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding}"/>
         </Grid>
 
-        <!-- Edit Tags Popup -->
-        <Border Grid.Row="0" Grid.RowSpan="3" 
-                Background="Black" 
-                Opacity="0.5"
-                IsVisible="{Binding IsEditTagsOpen}"/>
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsEditTagsOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:EditTagsPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding TagManagementViewModel}"/>
+        </Grid>
 
-        <Grid Grid.Row="0" Grid.RowSpan="3" 
-              HorizontalAlignment="Center" 
-              VerticalAlignment="Center"
-              IsVisible="{Binding IsEditTagsOpen}">
-            <Border Background="{StaticResource SecondaryBackground}" 
-                    Padding="20" 
-                    CornerRadius="10">
-                <StackPanel Width="300">
-                    <TextBlock Text="Edit Tags" 
-                             Margin="0,0,0,10"
-                             FontSize="18"
-                             FontWeight="Bold"/>
-                    <TextBox Text="{Binding EditingTags}" 
-                             Watermark="Tags (comma separated)"
-                             Margin="0,0,0,15"/>
-                    <StackPanel Orientation="Horizontal" 
-                              HorizontalAlignment="Right">
-                        <Button Content="Save" 
-                                Command="{Binding SaveTagsCommand}"
-                                Margin="0,0,10,0"/>
-                        <Button Content="Cancel" 
-                                Command="{Binding CloseEditTagsCommand}"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsSessionPanelOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <controls:SessionControlPanel HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"/>
         </Grid>
     </Grid>
 </Window>
