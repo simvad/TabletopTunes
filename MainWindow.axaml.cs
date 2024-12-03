@@ -24,7 +24,7 @@ namespace ModernMusicPlayer
         {
             if (e.Key == Key.Enter && DataContext is MainViewModel viewModel)
             {
-                viewModel.SearchViewModel.RefreshDisplayedTracks();
+                viewModel.SearchViewModel.UpdateDisplay();
             }
         }
 

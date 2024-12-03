@@ -22,7 +22,7 @@ namespace ModernMusicPlayer.Views.Controls
         {
             if (e.Key == Key.Enter && DataContext is SearchViewModel viewModel)
             {
-                viewModel.RefreshDisplayedTracks();
+                viewModel.UpdateDisplay();
             }
         }
     }

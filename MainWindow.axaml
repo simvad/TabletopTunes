@@ -46,7 +46,7 @@
         <!-- Top Search Bar -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10">
             <controls:SearchBarControl Grid.Column="0"
-                                     DataContext="{Binding}"/>
+                                     DataContext="{Binding SearchViewModel}"/>
             <Button Grid.Column="1"
                     Margin="10,0,0,0"
                     Command="{Binding OpenSessionPanelCommand}">
@@ -62,14 +62,14 @@
                                  Background="{StaticResource SecondaryBackground}"
                                  Margin="0"
                                  Padding="10"
-                                 DataContext="{Binding}"/>
+                                 DataContext="{Binding SearchViewModel}"/>
 
         <!-- Bottom Player Controls -->
         <controls:PlayerControlsControl Grid.Row="2" 
                                       Background="{StaticResource SecondaryBackground}"
                                       Height="80"
                                       Margin="10"
-                                      DataContext="{Binding}"/>
+                                      DataContext="{Binding PlaybackViewModel}"/>
 
         <!-- Floating Add Track Button -->
         <Button Grid.Row="1" 
@@ -95,7 +95,7 @@
             <Border Background="Black" Opacity="0.5"/>
             <popups:AddTrackPopup HorizontalAlignment="Center" 
                                  VerticalAlignment="Center"
-                                 DataContext="{Binding}"/>
+                                 DataContext="{Binding TrackManagementViewModel}"/>
         </Grid>
 
         <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsEditTagsOpen}">

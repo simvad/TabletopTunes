@@ -9,7 +9,6 @@ namespace ModernMusicPlayer.Services
     {
         private readonly MediaPlayer _mediaPlayer;
         private readonly Timer _positionTimer;
-        private bool _isPlayingState;
 
         public event EventHandler<EventArgs>? PlaybackFinished;
         public event EventHandler<EventArgs>? PlaybackStarted;
@@ -43,7 +42,6 @@ namespace ModernMusicPlayer.Services
             _mediaPlayer.Playing += (s, e) => 
             {
                 IsBuffering = false;
-                _isPlayingState = true;
                 PlaybackStarted?.Invoke(this, EventArgs.Empty);
             };
             _mediaPlayer.Buffering += (s, e) =>
@@ -53,7 +51,6 @@ namespace ModernMusicPlayer.Services
             };
             _mediaPlayer.EncounteredError += (s, e) =>
             {
-                _isPlayingState = false;
                 string error = "Playback error occurred";
                 ErrorOccurred?.Invoke(this, error);
             };

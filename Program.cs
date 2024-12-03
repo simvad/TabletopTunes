@@ -17,7 +17,6 @@ namespace ModernMusicPlayer
 {
     class Program
     {
-        public static IServiceProvider? ServiceProvider { get; private set; }
         private static IHost? WebHost { get; set; }
 
         [STAThread]
@@ -39,19 +38,22 @@ namespace ModernMusicPlayer
                 Task.Run(() => StartWebHost());
             }
 
-            // Set up dependency injection
-            var services = new ServiceCollection();
-            
-            // Register services
-            services.AddDbContext<MusicPlayerDbContext>();
-            services.AddScoped<ITrackRepository, TrackRepository>();
-            services.AddScoped<ITagRepository, TagRepository>();
-            services.AddSingleton<AudioPlayerService>();
-            services.AddSingleton(sessionConfig);  // Register configuration
-            services.AddSingleton<ISessionService, SessionService>();
-            
-            // Build the service provider
-            ServiceProvider = services.BuildServiceProvider();
+            // Create host builder
+            var host = Host.CreateDefaultBuilder()
+                .ConfigureServices((context, services) =>
+                {
+                    // Register services
+                    services.AddDbContext<MusicPlayerDbContext>();
+                    services.AddScoped<ITrackRepository, TrackRepository>();
+                    services.AddScoped<ITagRepository, TagRepository>();
+                    services.AddSingleton<AudioPlayerService>();
+                    services.AddSingleton(sessionConfig);  // Register configuration
+                    services.AddSingleton<ISessionService, SessionService>();
+                })
+                .Build();
+
+            // Set the service provider in App
+            App.ServiceProvider = host.Services;
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
@@ -61,6 +63,9 @@ namespace ModernMusicPlayer
             {
                 WebHost.StopAsync().Wait();
             }
+
+            // Dispose the host when the application exits
+            host.Dispose();
         }
 
         private static async Task StartWebHost()

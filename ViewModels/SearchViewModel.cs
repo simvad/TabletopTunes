@@ -21,8 +21,12 @@ namespace ModernMusicPlayer.ViewModels
             }
         }
 
-        private ReadOnlyObservableCollection<TrackEntity> _displayedTracks;
-        public ReadOnlyObservableCollection<TrackEntity> DisplayedTracks => _displayedTracks;
+        private ObservableCollection<TrackEntity> _displayedTracks;
+        public ObservableCollection<TrackEntity> DisplayedTracks
+        {
+            get => _displayedTracks;
+            private set => this.RaiseAndSetIfChanged(ref _displayedTracks, value);
+        }
 
         private readonly ObservableCollection<TrackEntity> _allTracks;
 
@@ -31,9 +35,19 @@ namespace ModernMusicPlayer.ViewModels
         public SearchViewModel(ObservableCollection<TrackEntity> allTracks)
         {
             _allTracks = allTracks;
-            _displayedTracks = new ReadOnlyObservableCollection<TrackEntity>(
-                new ObservableCollection<TrackEntity>(allTracks)
-            );
+            _displayedTracks = new ObservableCollection<TrackEntity>();
+            
+            // Initialize displayed tracks with all tracks
+            foreach (var track in _allTracks)
+            {
+                _displayedTracks.Add(track);
+            }
+
+            // Subscribe to collection changes
+            _allTracks.CollectionChanged += (s, e) =>
+            {
+                UpdateFilteredTracks();
+            };
         }
 
         private void UpdateFilteredTracks()
@@ -45,15 +59,17 @@ namespace ModernMusicPlayer.ViewModels
                 filtered = filtered.AsQueryable().ApplyQuery(SearchQuery);
             }
 
-            _displayedTracks = new ReadOnlyObservableCollection<TrackEntity>(
-                new ObservableCollection<TrackEntity>(filtered)
-            );
-            
-            this.RaisePropertyChanged(nameof(DisplayedTracks));
+            // Clear and repopulate the existing collection instead of creating a new one
+            _displayedTracks.Clear();
+            foreach (var track in filtered)
+            {
+                _displayedTracks.Add(track);
+            }
+
             FilteredTracksChanged?.Invoke(this, filtered.AsQueryable());
         }
 
-        public void RefreshDisplayedTracks()
+        public void UpdateDisplay()
         {
             UpdateFilteredTracks();
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using System.Threading.Tasks;
 using ModernMusicPlayer.Services;
 using ModernMusicPlayer.Repositories;
 using ModernMusicPlayer.Entities;
@@ -61,7 +62,7 @@ namespace ModernMusicPlayer.ViewModels
         public ICommand OpenSettingsCommand { get; }
         public ICommand PlayTrackCommand { get; }
         public ICommand EditTrackTagsCommand { get; }
-        public ICommand DeleteTrackCommand { get; }
+        public ICommand? DeleteTrackCommand { get; private set; }
         public ICommand CloseAddTrackCommand { get; }
         public ICommand CloseEditTagsCommand { get; }
         public ICommand CloseSettingsCommand { get; }
@@ -75,42 +76,52 @@ namespace ModernMusicPlayer.ViewModels
             SessionService = sessionService;
 
             // Initialize child view models
-            TrackManagementViewModel = new TrackManagementViewModel(trackRepository, audioPlayer);
+            TrackManagementViewModel = new TrackManagementViewModel(trackRepository, tagRepository, audioPlayer);
             TagManagementViewModel = new TagManagementViewModel(tagRepository, trackRepository);
             PlaybackViewModel = new PlaybackViewModel(audioPlayer, sessionService);
             SearchViewModel = new SearchViewModel(TrackManagementViewModel.AllTracks);
+
+            // Subscribe to track management events
+            TrackManagementViewModel.AddTrackCompleted += (s, e) => 
+            {
+                IsAddTrackOpen = false;
+                SearchViewModel.UpdateDisplay(); // Explicitly update display after adding track
+            };
+            
+            TrackManagementViewModel.TracksChanged += (s, e) => 
+            {
+                SearchViewModel.UpdateDisplay(); // Explicitly update display when tracks change
+            };
+            
+            TagManagementViewModel.TagsChanged += (s, e) => 
+            {
+                SearchViewModel.UpdateDisplay(); // Explicitly update display when tags change
+            };
 
             // Initialize commands
             OpenAddTrackCommand = ReactiveCommand.Create(() => IsAddTrackOpen = true);
             OpenSessionPanelCommand = ReactiveCommand.Create(() => IsSessionPanelOpen = true);
             ClearErrorCommand = ReactiveCommand.Create(() => ErrorMessage = null);
             OpenSettingsCommand = ReactiveCommand.Create(() => IsSettingsOpen = true);
-            PlayTrackCommand = ReactiveCommand.Create<TrackEntity>(track => PlaybackViewModel.PlayTrack(track));
+            PlayTrackCommand = ReactiveCommand.CreateFromTask<TrackEntity>(async track => 
+            {
+                if (track != null)
+                {
+                    await PlaybackViewModel.PlayTrack(track);
+                }
+            });
             EditTrackTagsCommand = ReactiveCommand.Create<TrackEntity>(track => 
             {
-                TagManagementViewModel.EditingTrack = track;
-                IsEditTagsOpen = true;
+                if (track != null)
+                {
+                    TagManagementViewModel.EditingTrack = track;
+                    IsEditTagsOpen = true;
+                }
             });
             DeleteTrackCommand = TrackManagementViewModel.DeleteTrackCommand;
             CloseAddTrackCommand = ReactiveCommand.Create(() => IsAddTrackOpen = false);
             CloseEditTagsCommand = ReactiveCommand.Create(() => IsEditTagsOpen = false);
             CloseSettingsCommand = ReactiveCommand.Create(() => IsSettingsOpen = false);
-
-            // Wire up events between view models
-            PlaybackViewModel.TrackPlayed += async (s, track) => 
-            {
-                await TrackManagementViewModel.UpdateTrackStatistics(track.Id);
-            };
-
-            TrackManagementViewModel.TracksChanged += (s, e) => 
-            {
-                SearchViewModel.RefreshDisplayedTracks();
-            };
-
-            TagManagementViewModel.TagsChanged += (s, e) => 
-            {
-                SearchViewModel.RefreshDisplayedTracks();
-            };
 
             SearchViewModel.FilteredTracksChanged += (s, filteredTracks) => 
             {

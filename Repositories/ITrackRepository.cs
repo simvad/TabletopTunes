@@ -13,7 +13,5 @@ namespace ModernMusicPlayer.Repositories
         Task<TrackEntity> AddAsync(TrackEntity track);
         Task UpdateAsync(TrackEntity track);
         Task DeleteAsync(string id);
-        Task UpdateLastPlayedAsync(string id);
-        Task IncrementPlayCountAsync(string id);
     }
 }

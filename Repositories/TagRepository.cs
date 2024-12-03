@@ -27,8 +27,7 @@ namespace ModernMusicPlayer.Repositories
             {
                 tag = new Tag 
                 { 
-                    Name = name,
-                    CreatedAt = DateTime.UtcNow
+                    Name = name
                 };
                 _context.Tags.Add(tag);
                 await _context.SaveChangesAsync();

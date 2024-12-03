@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -12,6 +13,8 @@ namespace ModernMusicPlayer
 {
     public partial class App : Application
     {
+        public static IServiceProvider? ServiceProvider { get; set; }
+
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -19,14 +22,14 @@ namespace ModernMusicPlayer
 
         public override void OnFrameworkInitializationCompleted()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && Program.ServiceProvider != null)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && ServiceProvider != null)
             {
                 // Get required services
-                var dbContext = Program.ServiceProvider.GetRequiredService<MusicPlayerDbContext>();
-                var trackRepository = Program.ServiceProvider.GetRequiredService<ITrackRepository>();
-                var tagRepository = Program.ServiceProvider.GetRequiredService<ITagRepository>();
-                var audioPlayer = Program.ServiceProvider.GetRequiredService<AudioPlayerService>();
-                var sessionService = Program.ServiceProvider.GetRequiredService<ISessionService>();
+                var dbContext = ServiceProvider.GetRequiredService<MusicPlayerDbContext>();
+                var trackRepository = ServiceProvider.GetRequiredService<ITrackRepository>();
+                var tagRepository = ServiceProvider.GetRequiredService<ITagRepository>();
+                var audioPlayer = ServiceProvider.GetRequiredService<AudioPlayerService>();
+                var sessionService = ServiceProvider.GetRequiredService<ISessionService>();
 
                 // Create main view model with dependencies
                 var mainViewModel = new MainViewModel(
@@ -43,10 +46,15 @@ namespace ModernMusicPlayer
                 };
 
                 // Handle application shutdown
-                desktop.Exit += (s, e) =>
+                desktop.Exit += async (s, e) =>
                 {
                     mainViewModel?.Dispose();
-                    if (Program.ServiceProvider is IDisposable disposable)
+
+                    if (ServiceProvider is IAsyncDisposable asyncDisposable)
+                    {
+                        await asyncDisposable.DisposeAsync();
+                    }
+                    else if (ServiceProvider is IDisposable disposable)
                     {
                         disposable.Dispose();
                     }

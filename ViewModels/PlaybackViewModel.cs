@@ -86,7 +86,7 @@ namespace ModernMusicPlayer.ViewModels
         {
             _playbackStateSubscription = _sessionService.PlaybackStateChanged
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(async state =>
+                .Subscribe(state =>
                 {
                     if (!_sessionService.IsHost)
                     {
@@ -105,7 +105,7 @@ namespace ModernMusicPlayer.ViewModels
 
             _trackChangedSubscription = _sessionService.TrackChanged
                 .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(async trackId =>
+                .Subscribe(trackId =>
                 {
                     if (!_sessionService.IsHost)
                     {
@@ -113,7 +113,7 @@ namespace ModernMusicPlayer.ViewModels
                         if (track != null)
                         {
                             _isUpdatingFromSession = true;
-                            await PlayTrack(track);
+                            _ = PlayTrack(track); // Fire and forget, but explicitly acknowledged
                             _isUpdatingFromSession = false;
                         }
                     }

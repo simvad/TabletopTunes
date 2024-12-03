@@ -14,16 +14,14 @@ namespace ModernMusicPlayer.ViewModels
     public class TrackManagementViewModel : ReactiveObject
     {
         private readonly ITrackRepository _trackRepository;
+        private readonly ITagRepository _tagRepository;
         private readonly AudioPlayerService _audioPlayer;
 
         private ObservableCollection<TrackEntity> _allTracks = new();
-        public ObservableCollection<TrackEntity> AllTracks => _allTracks;
-
-        private bool _isAddTrackOpen;
-        public bool IsAddTrackOpen
+        public ObservableCollection<TrackEntity> AllTracks
         {
-            get => _isAddTrackOpen;
-            set => this.RaiseAndSetIfChanged(ref _isAddTrackOpen, value);
+            get => _allTracks;
+            private set => this.RaiseAndSetIfChanged(ref _allTracks, value);
         }
 
         private string _newTrackUrl = "";
@@ -40,18 +38,19 @@ namespace ModernMusicPlayer.ViewModels
             set => this.RaiseAndSetIfChanged(ref _newTrackTags, value);
         }
 
-        public ICommand? OpenAddTrackCommand { get; private set; }
-        public ICommand? CloseAddTrackCommand { get; private set; }
         public ICommand? AddTrackCommand { get; private set; }
         public ICommand? DeleteTrackCommand { get; private set; }
 
         public event EventHandler? TracksChanged;
+        public event EventHandler? AddTrackCompleted;
 
         public TrackManagementViewModel(
             ITrackRepository trackRepository,
+            ITagRepository tagRepository,
             AudioPlayerService audioPlayer)
         {
             _trackRepository = trackRepository;
+            _tagRepository = tagRepository;
             _audioPlayer = audioPlayer;
 
             InitializeCommands();
@@ -63,7 +62,14 @@ namespace ModernMusicPlayer.ViewModels
             try
             {
                 var tracks = await _trackRepository.GetAllAsync();
-                _allTracks = new ObservableCollection<TrackEntity>(tracks);
+                
+                // Clear and repopulate the existing collection instead of creating a new one
+                AllTracks.Clear();
+                foreach (var track in tracks)
+                {
+                    AllTracks.Add(track);
+                }
+                
                 TracksChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -74,72 +80,78 @@ namespace ModernMusicPlayer.ViewModels
 
         private void InitializeCommands()
         {
-            OpenAddTrackCommand = new RelayCommand(() => IsAddTrackOpen = true);
-            CloseAddTrackCommand = new RelayCommand(() => 
-            {
-                IsAddTrackOpen = false;
-                NewTrackUrl = "";
-                NewTrackTags = "";
-            });
-
             DeleteTrackCommand = new RelayCommand<TrackEntity>(async track =>
             {
                 if (track != null)
                 {
                     await _trackRepository.DeleteAsync(track.Id);
-                    _allTracks.Remove(track);
+                    AllTracks.Remove(track);
                     TracksChanged?.Invoke(this, EventArgs.Empty);
                 }
             });
 
             AddTrackCommand = new RelayCommand(async () =>
             {
-                if (!string.IsNullOrWhiteSpace(NewTrackUrl))
+                if (string.IsNullOrWhiteSpace(NewTrackUrl))
                 {
-                    try
+                    return;
+                }
+
+                try
+                {
+                    var title = await _audioPlayer.GetVideoTitle(NewTrackUrl);
+                    
+                    var newTrack = new TrackEntity
                     {
-                        var title = await _audioPlayer.GetVideoTitle(NewTrackUrl);
-                        
-                        var newTrack = new TrackEntity
+                        Title = title,
+                        Url = NewTrackUrl,
+                        TrackTags = new System.Collections.Generic.List<TrackTag>()
+                    };
+
+                    // First save the track
+                    var savedTrack = await _trackRepository.AddAsync(newTrack);
+
+                    // Then process tags if any are provided
+                    if (!string.IsNullOrWhiteSpace(NewTrackTags))
+                    {
+                        var tagNames = NewTrackTags.Split(',')
+                            .Select(t => t.Trim())
+                            .Where(t => !string.IsNullOrWhiteSpace(t));
+
+                        foreach (var tagName in tagNames)
                         {
-                            Title = title,
-                            Url = NewTrackUrl,
-                            CreatedAt = DateTime.UtcNow
-                        };
+                            // Get or create the tag
+                            var tag = await _tagRepository.GetOrCreateTagAsync(tagName);
+                            
+                            // Create the track-tag relationship
+                            savedTrack.TrackTags.Add(new TrackTag
+                            {
+                                TrackId = savedTrack.Id,
+                                TagId = tag.Id,
+                                Tag = tag
+                            });
+                        }
 
-                        var savedTrack = await _trackRepository.AddAsync(newTrack);
-                        _allTracks.Add(savedTrack);
-                        TracksChanged?.Invoke(this, EventArgs.Empty);
+                        // Update the track with its new tags
+                        await _trackRepository.UpdateAsync(savedTrack);
+                    }
 
-                        IsAddTrackOpen = false;
-                        NewTrackUrl = "";
-                        NewTrackTags = "";
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error adding track: {ex.Message}");
-                    }
+                    // Add the new track to the collection
+                    AllTracks.Add(savedTrack);
+                    TracksChanged?.Invoke(this, EventArgs.Empty);
+
+                    // Clear the form
+                    NewTrackUrl = "";
+                    NewTrackTags = "";
+
+                    // Notify that track addition is complete
+                    AddTrackCompleted?.Invoke(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding track: {ex.Message}");
                 }
             });
-        }
-
-        public async Task UpdateTrackStatistics(string trackId)
-        {
-            await _trackRepository.IncrementPlayCountAsync(trackId);
-            await _trackRepository.UpdateLastPlayedAsync(trackId);
-            
-            // Refresh the track data
-            var updatedTrack = await _trackRepository.GetByIdAsync(trackId);
-            if (updatedTrack != null)
-            {
-                var existingTrack = _allTracks.FirstOrDefault(t => t.Id == trackId);
-                if (existingTrack != null)
-                {
-                    var index = _allTracks.IndexOf(existingTrack);
-                    _allTracks[index] = updatedTrack;
-                    TracksChanged?.Invoke(this, EventArgs.Empty);
-                }
-            }
         }
     }
 }

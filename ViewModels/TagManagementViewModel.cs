@@ -82,8 +82,7 @@ namespace ModernMusicPlayer.ViewModels
                             EditingTrack.TrackTags.Add(new TrackTag 
                             { 
                                 Track = EditingTrack,
-                                Tag = tag,
-                                AddedAt = DateTime.UtcNow
+                                Tag = tag
                             });
                         }
 

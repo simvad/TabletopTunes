@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -71,10 +70,14 @@ namespace ModernMusicPlayer.Repositories
 
         public async Task<TrackEntity> AddAsync(TrackEntity track)
         {
-            track.CreatedAt = DateTime.UtcNow;
             _context.Tracks.Add(track);
             await _context.SaveChangesAsync();
-            return track;
+            
+            // Reload the track with its relationships
+            return await _context.Tracks
+                .Include(t => t.TrackTags)
+                .ThenInclude(tt => tt.Tag)
+                .FirstAsync(t => t.Id == track.Id);
         }
 
         public async Task UpdateAsync(TrackEntity track)
@@ -89,26 +92,6 @@ namespace ModernMusicPlayer.Repositories
             if (track != null)
             {
                 _context.Tracks.Remove(track);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task UpdateLastPlayedAsync(string id)
-        {
-            var track = await _context.Tracks.FindAsync(id);
-            if (track != null)
-            {
-                track.LastPlayedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task IncrementPlayCountAsync(string id)
-        {
-            var track = await _context.Tracks.FindAsync(id);
-            if (track != null)
-            {
-                track.PlayCount++;
                 await _context.SaveChangesAsync();
             }
         }

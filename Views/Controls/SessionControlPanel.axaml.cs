@@ -18,7 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ModernMusicPlayer.Views.Controls
 {
-    public partial class SessionControlPanel : UserControl
+    public partial class SessionControlPanel : UserControl, IDisposable
     {
         private readonly ISessionService _sessionService;
         private TextBlock? _statusText;
@@ -39,7 +39,7 @@ namespace ModernMusicPlayer.Views.Controls
         public SessionControlPanel()
         {
             InitializeComponent();
-            _sessionService = Program.ServiceProvider?.GetService<ISessionService>() 
+            _sessionService = App.ServiceProvider?.GetService<ISessionService>() 
                 ?? throw new InvalidOperationException("SessionService not found in DI container");
 
             _connectedClients = new ObservableCollection<string>();
