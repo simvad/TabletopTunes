@@ -21,6 +21,9 @@ namespace ModernMusicPlayer.ViewModels
         private IDisposable? _playbackStateSubscription;
         private IDisposable? _trackChangedSubscription;
         private IDisposable? _sessionEndedSubscription;
+        private System.Timers.Timer? _syncTimer;
+        private DateTime _lastStateUpdate = DateTime.UtcNow;
+        private int _currentVolume = 100; // Store current volume level
 
         private TrackEntity? _currentTrack;
         public TrackEntity? CurrentTrack
@@ -80,6 +83,27 @@ namespace ModernMusicPlayer.ViewModels
             InitializeAudioPlayerEvents();
             InitializeSessionEvents();
             InitializeCommands();
+            InitializeSyncTimer();
+
+            // Set initial volume
+            _audioPlayer.SetVolume(_currentVolume);
+        }
+
+        private void InitializeSyncTimer()
+        {
+            if (!_sessionService.IsHost)
+            {
+                _syncTimer = new System.Timers.Timer(5000); // Check every 5 seconds
+                _syncTimer.Elapsed += async (s, e) =>
+                {
+                    if (_sessionService.IsConnected && !_isUpdatingFromSession && 
+                        (DateTime.UtcNow - _lastStateUpdate).TotalSeconds > 5)
+                    {
+                        await _sessionService.RequestSyncState();
+                    }
+                };
+                _syncTimer.Start();
+            }
         }
 
         private void InitializeSessionEvents()
@@ -91,14 +115,30 @@ namespace ModernMusicPlayer.ViewModels
                     if (!_sessionService.IsHost)
                     {
                         _isUpdatingFromSession = true;
+                        _lastStateUpdate = DateTime.UtcNow;
+
                         if (state.IsPlaying != IsPlaying)
                         {
                             if (state.IsPlaying)
+                            {
                                 _audioPlayer.Resume();
+                                // Restore volume after resume
+                                _audioPlayer.SetVolume(_currentVolume);
+                            }
                             else
                                 _audioPlayer.Pause();
+                            IsPlaying = state.IsPlaying;
                         }
-                        _audioPlayer.Seek(state.Position);
+
+                        // Only seek if the difference is significant (more than 1 second)
+                        var currentPos = _audioPlayer.CurrentPosition;
+                        var timeDiff = Math.Abs((state.Position - currentPos).TotalSeconds);
+                        if (timeDiff > 1)
+                        {
+                            _audioPlayer.Seek(state.Position);
+                            CurrentPosition = state.Position;
+                        }
+
                         _isUpdatingFromSession = false;
                     }
                 });
@@ -113,7 +153,7 @@ namespace ModernMusicPlayer.ViewModels
                         if (track != null)
                         {
                             _isUpdatingFromSession = true;
-                            _ = PlayTrack(track); // Fire and forget, but explicitly acknowledged
+                            _ = PlayTrack(track);
                             _isUpdatingFromSession = false;
                         }
                     }
@@ -123,25 +163,37 @@ namespace ModernMusicPlayer.ViewModels
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(_ =>
                 {
-                    // Session ended, restore normal playback control
                     _isUpdatingFromSession = false;
+                    _syncTimer?.Stop();
                 });
         }
 
         private void InitializeAudioPlayerEvents()
         {
-            _audioPlayer.PlaybackStarted += (s, e) => 
+            _audioPlayer.PlaybackStarted += async (s, e) => 
             {
                 IsPlaying = true;
                 Duration = _audioPlayer.Duration;
+                // Restore volume when playback starts
+                _audioPlayer.SetVolume(_currentVolume);
+
+                if (_sessionService.IsHost && !_isUpdatingFromSession)
+                {
+                    await _sessionService.UpdatePlaybackState(true, TimeSpan.Zero);
+                }
             };
             
             _audioPlayer.PlaybackFinished += async (s, e) => 
             {
                 IsPlaying = false;
+                if (_sessionService.IsHost)
+                {
+                    await _sessionService.UpdatePlaybackState(false, TimeSpan.Zero);
+                }
+                
                 if (IsRandomLoopActive && _sessionService.IsHost)
                 {
-                    await Task.Delay(500); // Small delay to ensure clean transition
+                    await Task.Delay(500);
                     await PlayNextInQueue();
                 }
             };
@@ -151,7 +203,12 @@ namespace ModernMusicPlayer.ViewModels
                 CurrentPosition = position;
                 if (_sessionService.IsHost && !_isUpdatingFromSession)
                 {
-                    await _sessionService.UpdatePlaybackState(IsPlaying, position);
+                    // Only send position updates every second to reduce network traffic
+                    if ((DateTime.UtcNow - _lastStateUpdate).TotalSeconds >= 1)
+                    {
+                        await _sessionService.UpdatePlaybackState(IsPlaying, position);
+                        _lastStateUpdate = DateTime.UtcNow;
+                    }
                 }
             };
             
@@ -167,46 +224,55 @@ namespace ModernMusicPlayer.ViewModels
             {
                 if (track?.Url != null && (_sessionService.IsHost || !_sessionService.IsConnected))
                 {
-                    // Stop any current random playback
                     IsRandomLoopActive = false;
                     _playQueue.Clear();
-                    
                     await PlayTrack(track);
                 }
             });
 
-            PlayPauseCommand = new RelayCommand(() =>
+            PlayPauseCommand = new RelayCommand(async () =>
             {
                 if (_sessionService.IsConnected && !_sessionService.IsHost)
                     return;
 
                 if (IsPlaying)
+                {
                     _audioPlayer.Pause();
+                    IsPlaying = false;
+                }
                 else
+                {
                     _audioPlayer.Resume();
+                    // Restore volume after resume
+                    _audioPlayer.SetVolume(_currentVolume);
+                    IsPlaying = true;
+                }
 
                 if (_sessionService.IsHost)
                 {
-                    _sessionService.UpdatePlaybackState(IsPlaying, CurrentPosition);
+                    await _sessionService.UpdatePlaybackState(IsPlaying, CurrentPosition);
+                    _lastStateUpdate = DateTime.UtcNow;
                 }
             });
 
-            StopCommand = new RelayCommand(() => 
+            StopCommand = new RelayCommand(async () => 
             {
                 if (_sessionService.IsConnected && !_sessionService.IsHost)
                     return;
 
                 _audioPlayer.Stop();
+                IsPlaying = false;
                 IsRandomLoopActive = false;
                 _playQueue.Clear();
 
                 if (_sessionService.IsHost)
                 {
-                    _sessionService.UpdatePlaybackState(false, TimeSpan.Zero);
+                    await _sessionService.UpdatePlaybackState(false, TimeSpan.Zero);
+                    _lastStateUpdate = DateTime.UtcNow;
                 }
             });
 
-            SeekCommand = new RelayCommand<double>(position =>
+            SeekCommand = new RelayCommand<double>(async position =>
             {
                 if (_sessionService.IsConnected && !_sessionService.IsHost)
                     return;
@@ -216,13 +282,15 @@ namespace ModernMusicPlayer.ViewModels
 
                 if (_sessionService.IsHost)
                 {
-                    _sessionService.UpdatePlaybackState(IsPlaying, seekPosition);
+                    await _sessionService.UpdatePlaybackState(IsPlaying, seekPosition);
+                    _lastStateUpdate = DateTime.UtcNow;
                 }
             });
 
             VolumeCommand = new RelayCommand<double>(volume =>
             {
-                _audioPlayer.SetVolume((int)volume);
+                _currentVolume = (int)volume;
+                _audioPlayer.SetVolume(_currentVolume);
             });
         }
 
@@ -234,11 +302,15 @@ namespace ModernMusicPlayer.ViewModels
                 try
                 {
                     await _audioPlayer.PlayFromYoutubeUrl(track.Url);
+                    // Restore volume after starting new track
+                    _audioPlayer.SetVolume(_currentVolume);
                     TrackPlayed?.Invoke(this, track);
 
                     if (_sessionService.IsHost && !_isUpdatingFromSession)
                     {
                         await _sessionService.UpdateTrack(track.Id.ToString());
+                        await _sessionService.UpdatePlaybackState(true, TimeSpan.Zero);
+                        _lastStateUpdate = DateTime.UtcNow;
                     }
                 }
                 catch (Exception ex)
@@ -318,6 +390,7 @@ namespace ModernMusicPlayer.ViewModels
             _playbackStateSubscription?.Dispose();
             _trackChangedSubscription?.Dispose();
             _sessionEndedSubscription?.Dispose();
+            _syncTimer?.Dispose();
         }
     }
 }

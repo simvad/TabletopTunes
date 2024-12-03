@@ -18,7 +18,8 @@ namespace ModernMusicPlayer.Services
                 HostConnectionId = Context.ConnectionId,
                 CurrentTrackId = null,
                 IsPlaying = false,
-                Position = TimeSpan.Zero
+                Position = TimeSpan.Zero,
+                LastUpdateTime = DateTime.UtcNow
             };
 
             _sessions[sessionCode] = sessionInfo;
@@ -39,7 +40,7 @@ namespace ModernMusicPlayer.Services
             // Notify host of new client
             await Clients.Client(sessionInfo.HostConnectionId).SendAsync("ClientJoined", Context.ConnectionId);
             
-            // Send current playback state to new client
+            // Send current track state to new client
             if (sessionInfo.CurrentTrackId != null)
             {
                 await Clients.Caller.SendAsync("TrackChanged", sessionInfo.CurrentTrackId);
@@ -56,6 +57,7 @@ namespace ModernMusicPlayer.Services
             {
                 sessionInfo.IsPlaying = isPlaying;
                 sessionInfo.Position = position;
+                sessionInfo.LastUpdateTime = DateTime.UtcNow;
                 await Clients.OthersInGroup(sessionCode).SendAsync("PlaybackStateChanged", isPlaying, position);
             }
         }
@@ -67,8 +69,26 @@ namespace ModernMusicPlayer.Services
             {
                 sessionInfo.CurrentTrackId = trackId;
                 sessionInfo.Position = TimeSpan.Zero;
+                sessionInfo.LastUpdateTime = DateTime.UtcNow;
                 await Clients.OthersInGroup(sessionCode).SendAsync("TrackChanged", trackId);
             }
+        }
+
+        public async Task RequestSyncState(string sessionCode)
+        {
+            if (_sessions.TryGetValue(sessionCode, out var sessionInfo))
+            {
+                // Only sync if we haven't received an update in the last 5 seconds
+                if ((DateTime.UtcNow - sessionInfo.LastUpdateTime).TotalSeconds > 5)
+                {
+                    await Clients.Client(sessionInfo.HostConnectionId).SendAsync("RequestPlaybackState", Context.ConnectionId);
+                }
+            }
+        }
+
+        public async Task SendSyncState(string clientId, bool isPlaying, TimeSpan position)
+        {
+            await Clients.Client(clientId).SendAsync("PlaybackStateChanged", isPlaying, position);
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
@@ -118,6 +138,7 @@ namespace ModernMusicPlayer.Services
             public string? CurrentTrackId { get; set; }
             public bool IsPlaying { get; set; }
             public TimeSpan Position { get; set; }
+            public DateTime LastUpdateTime { get; set; }
         }
     }
 }

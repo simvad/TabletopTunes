@@ -5,25 +5,6 @@ using System.Reactive.Subjects;
 
 namespace ModernMusicPlayer.Services
 {
-    public interface ISessionService
-    {
-        bool IsConnected { get; }
-        bool IsHost { get; }
-        string? SessionCode { get; }
-        
-        Task<bool> StartHosting();
-        Task<bool> JoinSession(string code);
-        Task LeaveSession();
-        Task UpdatePlaybackState(bool isPlaying, TimeSpan position);
-        Task UpdateTrack(string trackId);
-
-        IObservable<(bool IsPlaying, TimeSpan Position)> PlaybackStateChanged { get; }
-        IObservable<string> TrackChanged { get; }
-        IObservable<string> ClientJoined { get; }
-        IObservable<string> ClientLeft { get; }
-        IObservable<Unit> SessionEnded { get; }
-    }
-
     public class SessionService : ISessionService, IAsyncDisposable
     {
         private readonly SessionConfiguration _configuration;
@@ -86,6 +67,14 @@ namespace ModernMusicPlayer.Services
                     _sessionEnded.OnNext(Unit.Default);
                     _sessionCode = null;
                     _isHost = false;
+                });
+
+                _hubConnection.On<string>("RequestPlaybackState", async (clientId) =>
+                {
+                    if (_isHost)
+                    {
+                        await _hubConnection.InvokeAsync("SendSyncState", clientId, true, TimeSpan.Zero);
+                    }
                 });
 
                 await _hubConnection.StartAsync();
@@ -155,6 +144,14 @@ namespace ModernMusicPlayer.Services
             if (_isHost && _hubConnection != null && _sessionCode != null)
             {
                 await _hubConnection.InvokeAsync("UpdateTrack", _sessionCode, trackId);
+            }
+        }
+
+        public async Task RequestSyncState()
+        {
+            if (!_isHost && _hubConnection != null && _sessionCode != null)
+            {
+                await _hubConnection.InvokeAsync("RequestSyncState", _sessionCode);
             }
         }
 

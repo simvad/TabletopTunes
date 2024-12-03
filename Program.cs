@@ -12,12 +12,15 @@ using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
+using System.Net.Sockets;
+using System.Net;
 
 namespace ModernMusicPlayer
 {
     class Program
     {
         private static IHost? WebHost { get; set; }
+        private static bool useLocalDevelopment = true;  // Set to false for Azure production
 
         [STAThread]
         public static void Main(string[] args)
@@ -27,12 +30,12 @@ namespace ModernMusicPlayer
                 CheckLinuxDependencies();
             }
 
-            // Set up session configuration
-            var sessionConfig = SessionConfiguration.CreateLocalDevelopment();
-            // For production, use:
-            // var sessionConfig = SessionConfiguration.CreateAzureProduction("https://your-azure-url.com");
+            // Set up session configuration based on environment
+            var sessionConfig = useLocalDevelopment
+                ? SessionConfiguration.CreateLocalDevelopment()
+                : SessionConfiguration.CreateAzureProduction("https://your-azure-url.com");  // Replace with your Azure URL
 
-            // Start local web host for SignalR if needed
+            // Start local web host for SignalR if needed (only in local development)
             if (sessionConfig.StartLocalServer)
             {
                 Task.Run(() => StartWebHost());
@@ -68,8 +71,30 @@ namespace ModernMusicPlayer
             host.Dispose();
         }
 
+        private static bool IsPortAvailable(int port)
+        {
+            try
+            {
+                using var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                socket.Bind(new IPEndPoint(IPAddress.Parse("127.0.0.1"), port));
+                socket.Close();
+                return true;
+            }
+            catch (SocketException)
+            {
+                return false;
+            }
+        }
+
         private static async Task StartWebHost()
         {
+            // Check if port 5000 is available before attempting to start the server
+            if (!IsPortAvailable(5000))
+            {
+                // Port is in use, likely by another instance. Skip server startup silently.
+                return;
+            }
+
             var builder = WebApplication.CreateBuilder();
 
             // Add services to the container
@@ -85,15 +110,24 @@ namespace ModernMusicPlayer
                 });
             });
 
-            WebHost = builder.Build();
+            try
+            {
+                WebHost = builder.Build();
 
-            // Configure the HTTP request pipeline
-            var app = (WebApplication)WebHost;
+                // Configure the HTTP request pipeline
+                var app = (WebApplication)WebHost;
 
-            app.UseCors();
-            app.MapHub<SessionHub>("/sessionHub");
+                app.UseCors();
+                app.MapHub<SessionHub>("/sessionHub");
 
-            await app.RunAsync("http://localhost:5000");
+                await app.RunAsync("http://localhost:5000");
+            }
+            catch (IOException)
+            {
+                // If server startup fails (e.g., port became unavailable after our check),
+                // handle it silently as the application can still function as a client
+                WebHost = null;
+            }
         }
 
         public static AppBuilder BuildAvaloniaApp()
