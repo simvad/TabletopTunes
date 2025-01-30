@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ModernMusicPlayer.Commands;
+using ModernMusicPlayer.Common;
 using ModernMusicPlayer.Entities;
 using ModernMusicPlayer.Services;
 using ReactiveUI;
@@ -23,7 +23,7 @@ namespace ModernMusicPlayer.ViewModels
         private IDisposable? _sessionEndedSubscription;
         private System.Timers.Timer? _syncTimer;
         private DateTime _lastStateUpdate = DateTime.UtcNow;
-        private int _currentVolume = 100; // Store current volume level
+        private int _currentVolume = 100;
 
         private TrackEntity? _currentTrack;
         public TrackEntity? CurrentTrack
@@ -77,8 +77,9 @@ namespace ModernMusicPlayer.ViewModels
 
         public PlaybackViewModel(AudioPlayerService audioPlayer, ISessionService sessionService)
         {
-            _audioPlayer = audioPlayer;
             _sessionService = sessionService;
+            // Create a new AudioPlayerService with the correct host/guest status
+            _audioPlayer = new AudioPlayerService(sessionService.IsHost);
 
             InitializeAudioPlayerEvents();
             InitializeSessionEvents();

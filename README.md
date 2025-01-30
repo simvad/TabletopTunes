@@ -7,15 +7,17 @@ A music player built with Avalonia UI that streams from YouTube URLs and organiz
 No additional prerequisites needed.
 
 ### Linux
-Install VLC and LibVLC development files:
+Install VLC, LibVLC development files, and PulseAudio:
 Ubuntu/Debian:
 ```bash
-sudo apt-get install vlc libvlc-dev
+sudo apt-get install vlc libvlc-dev pulseaudio
 ```
 Fedora:
 ```bash
-sudo dnf install vlc vlc-devel
+sudo dnf install vlc vlc-devel pulseaudio
 ```
+
+Note: If you're using PipeWire instead of PulseAudio, the PulseAudio compatibility layer will be used automatically.
 
 ## Setup
 
@@ -74,6 +76,16 @@ To test with multiple instances locally:
 
 All instances will now be synchronized, with the host controlling playback.
 
+#### Audio Separation on Linux
+When running multiple instances on Linux, TabletopTunes automatically handles audio separation:
+- Host instance uses the system's default audio output
+- Guest instances use dedicated virtual audio sinks
+- Each instance can have independent volume control
+- Virtual sinks are automatically created and cleaned up
+- Works with both PulseAudio and PipeWire
+
+This means you can test synchronized playback on a single machine without audio conflicts. Each instance's volume can be controlled independently through the system's audio settings or the application's volume control.
+
 ### Azure Deployment Mode
 For production deployment, the session hub can be hosted on Azure:
 1. Deploy the SignalR hub to Azure
@@ -112,3 +124,5 @@ Note: In Azure mode, make sure your Azure SignalR hub is running and accessible 
   - Host a session and share the code
   - Join existing sessions
   - Synchronized play/pause and track changes
+  - Independent volume control per instance
+  - Automatic audio separation on Linux for local testing

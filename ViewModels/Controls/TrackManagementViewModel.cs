@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ModernMusicPlayer.Commands;
+using ModernMusicPlayer.Common;
 using ModernMusicPlayer.Entities;
 using ModernMusicPlayer.Repositories;
 using ModernMusicPlayer.Services;
@@ -63,7 +63,6 @@ namespace ModernMusicPlayer.ViewModels
             {
                 var tracks = await _trackRepository.GetAllAsync();
                 
-                // Clear and repopulate the existing collection instead of creating a new one
                 AllTracks.Clear();
                 foreach (var track in tracks)
                 {
@@ -108,10 +107,8 @@ namespace ModernMusicPlayer.ViewModels
                         TrackTags = new System.Collections.Generic.List<TrackTag>()
                     };
 
-                    // First save the track
                     var savedTrack = await _trackRepository.AddAsync(newTrack);
 
-                    // Then process tags if any are provided
                     if (!string.IsNullOrWhiteSpace(NewTrackTags))
                     {
                         var tagNames = NewTrackTags.Split(',')
@@ -120,10 +117,8 @@ namespace ModernMusicPlayer.ViewModels
 
                         foreach (var tagName in tagNames)
                         {
-                            // Get or create the tag
                             var tag = await _tagRepository.GetOrCreateTagAsync(tagName);
                             
-                            // Create the track-tag relationship
                             savedTrack.TrackTags.Add(new TrackTag
                             {
                                 TrackId = savedTrack.Id,
@@ -132,19 +127,15 @@ namespace ModernMusicPlayer.ViewModels
                             });
                         }
 
-                        // Update the track with its new tags
                         await _trackRepository.UpdateAsync(savedTrack);
                     }
 
-                    // Add the new track to the collection
                     AllTracks.Add(savedTrack);
                     TracksChanged?.Invoke(this, EventArgs.Empty);
 
-                    // Clear the form
                     NewTrackUrl = "";
                     NewTrackTags = "";
 
-                    // Notify that track addition is complete
                     AddTrackCompleted?.Invoke(this, EventArgs.Empty);
                 }
                 catch (Exception ex)

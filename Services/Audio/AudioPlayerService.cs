@@ -12,6 +12,7 @@ namespace ModernMusicPlayer.Services
         private readonly AudioPlayerEventHandler _eventHandler;
         private Media? _currentMedia;
         private bool _isDisposed;
+        private readonly bool _isHost;
 
         public event EventHandler<EventArgs>? PlaybackFinished
         {
@@ -54,15 +55,20 @@ namespace ModernMusicPlayer.Services
             ? TimeSpan.FromMilliseconds(time)
             : TimeSpan.Zero;
 
-        public AudioPlayerService()
+        public AudioPlayerService(bool isHost = true)
         {
+            _isHost = isHost;
             try
             {
-                _libVlc = AudioPlayerConfiguration.CreateLibVLC();
+                // Create LibVLC instance with host/guest specific configuration
+                _libVlc = AudioPlayerConfiguration.CreateLibVLC(isHost);
                 _mediaPlayer = new MediaPlayer(_libVlc);
                 _eventHandler = new AudioPlayerEventHandler(_mediaPlayer);
                 _youtubeService = new YouTubePlaybackService(_libVlc, 
                     error => _eventHandler.RaiseError(error));
+
+                // Set initial volume based on host/guest status
+                _mediaPlayer.Volume = 100;
             }
             catch (Exception ex)
             {
@@ -133,7 +139,6 @@ namespace ModernMusicPlayer.Services
         {
             if (_mediaPlayer?.IsSeekable == true && !IsBuffering)
             {
-                // Implement smooth seeking
                 var targetMs = (long)position.TotalMilliseconds;
                 if (Math.Abs(targetMs - _mediaPlayer.Time) > 1000)
                 {

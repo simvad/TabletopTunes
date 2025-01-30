@@ -19,7 +19,6 @@ namespace ModernMusicPlayer.Data
             var path = Environment.GetFolderPath(folder);
             DbPath = System.IO.Path.Join(path, "ModernMusicPlayer", "musicplayer.db");
             
-            // Ensure directory exists
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(DbPath)!);
         }
 
@@ -28,7 +27,6 @@ namespace ModernMusicPlayer.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure TrackEntity
             modelBuilder.Entity<TrackEntity>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -36,7 +34,6 @@ namespace ModernMusicPlayer.Data
                 entity.Property(e => e.Url).IsRequired();
             });
 
-            // Configure Tag
             modelBuilder.Entity<Tag>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -44,7 +41,6 @@ namespace ModernMusicPlayer.Data
                 entity.HasIndex(e => e.Name).IsUnique();
             });
 
-            // Configure TrackTag join entity
             modelBuilder.Entity<TrackTag>(entity =>
             {
                 entity.HasKey(t => new { t.TrackId, t.TagId });

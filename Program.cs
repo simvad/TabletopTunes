@@ -41,11 +41,9 @@ namespace ModernMusicPlayer
                 Task.Run(() => StartWebHost());
             }
 
-            // Create host builder
             var host = Host.CreateDefaultBuilder()
                 .ConfigureServices((context, services) =>
                 {
-                    // Register services
                     services.AddDbContext<MusicPlayerDbContext>();
                     services.AddScoped<ITrackRepository, TrackRepository>();
                     services.AddScoped<ITagRepository, TagRepository>();
@@ -55,19 +53,16 @@ namespace ModernMusicPlayer
                 })
                 .Build();
 
-            // Set the service provider in App
             App.ServiceProvider = host.Services;
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
 
-            // Cleanup web host on application exit
             if (WebHost != null)
             {
                 WebHost.StopAsync().Wait();
             }
 
-            // Dispose the host when the application exits
             host.Dispose();
         }
 
@@ -91,13 +86,12 @@ namespace ModernMusicPlayer
             // Check if port 5000 is available before attempting to start the server
             if (!IsPortAvailable(5000))
             {
-                // Port is in use, likely by another instance. Skip server startup silently.
+                // Port is in use by another instance. Skip server startup silently.
                 return;
             }
 
             var builder = WebApplication.CreateBuilder();
 
-            // Add services to the container
             builder.Services.AddSignalR();
             builder.Services.AddCors(options =>
             {
@@ -114,7 +108,6 @@ namespace ModernMusicPlayer
             {
                 WebHost = builder.Build();
 
-                // Configure the HTTP request pipeline
                 var app = (WebApplication)WebHost;
 
                 app.UseCors();

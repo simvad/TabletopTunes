@@ -1,11 +1,11 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:ModernMusicPlayer.Converters"
+             xmlns:common="clr-namespace:ModernMusicPlayer.Common"
              x:Class="ModernMusicPlayer.App"
              RequestedThemeVariant="Dark">
              
     <Application.Resources>
-        <converters:BoolToPlayPauseConverter x:Key="BoolToPlayPauseConverter"/>
+        <common:BoolToPlayPauseConverter x:Key="BoolToPlayPauseConverter"/>
     </Application.Resources>
 
     <Application.Styles>

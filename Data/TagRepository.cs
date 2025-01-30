@@ -81,14 +81,11 @@ namespace ModernMusicPlayer.Repositories
 
             if (sourceTag != null && targetTag != null)
             {
-                // Begin transaction
                 using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    // Update all TrackTags to point to the target tag
                     foreach (var trackTag in sourceTag.TrackTags.ToList())
                     {
-                        // Check if the track already has the target tag
                         var existingTrackTag = await _context.TrackTags
                             .FirstOrDefaultAsync(tt => 
                                 tt.TrackId == trackTag.TrackId && 
@@ -96,18 +93,15 @@ namespace ModernMusicPlayer.Repositories
 
                         if (existingTrackTag == null)
                         {
-                            // If no existing relationship, update the current one
                             trackTag.TagId = targetTagId;
                             trackTag.Tag = targetTag;
                         }
                         else
                         {
-                            // If relationship already exists, remove the duplicate
                             _context.TrackTags.Remove(trackTag);
                         }
                     }
 
-                    // Remove the source tag
                     _context.Tags.Remove(sourceTag);
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();

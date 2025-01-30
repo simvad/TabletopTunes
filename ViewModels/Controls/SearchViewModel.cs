@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ModernMusicPlayer.Entities;
-using ModernMusicPlayer.Query;
+using ModernMusicPlayer.Common;
 using ReactiveUI;
 
 namespace ModernMusicPlayer.ViewModels
@@ -37,13 +37,11 @@ namespace ModernMusicPlayer.ViewModels
             _allTracks = allTracks;
             _displayedTracks = new ObservableCollection<TrackEntity>();
             
-            // Initialize displayed tracks with all tracks
             foreach (var track in _allTracks)
             {
                 _displayedTracks.Add(track);
             }
 
-            // Subscribe to collection changes
             _allTracks.CollectionChanged += (s, e) =>
             {
                 UpdateFilteredTracks();
@@ -59,7 +57,6 @@ namespace ModernMusicPlayer.ViewModels
                 filtered = filtered.AsQueryable().ApplyQuery(SearchQuery);
             }
 
-            // Clear and repopulate the existing collection instead of creating a new one
             _displayedTracks.Clear();
             foreach (var track in filtered)
             {

@@ -1,8 +1,7 @@
-// Commands/RelayCommand.cs
 using System;
 using System.Windows.Input;
 
-namespace ModernMusicPlayer.Commands
+namespace ModernMusicPlayer.Common
 {
     public class RelayCommand : ICommand
     {

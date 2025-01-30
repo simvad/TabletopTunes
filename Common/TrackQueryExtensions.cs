@@ -1,7 +1,7 @@
 using System.Linq;
 using ModernMusicPlayer.Entities;
 
-namespace ModernMusicPlayer.Query
+namespace ModernMusicPlayer.Common
 {
     public static class TrackQueryExtensions
     {

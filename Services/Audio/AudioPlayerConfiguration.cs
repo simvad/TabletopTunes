@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using LibVLCSharp.Shared;
@@ -8,18 +9,10 @@ namespace ModernMusicPlayer.Services
     {
         private const int BufferSize = 32768; // 32KB buffer
 
-        public static LibVLC CreateLibVLC()
+        public static LibVLC CreateLibVLC(bool isHost = true)
         {
-            var options = GetLibVLCOptions();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                // On Linux, use system-installed VLC
-                return new LibVLC(options.ToArray());
-            }
-            
-            // On Windows or other platforms, use default initialization
             Core.Initialize();
+            var options = GetLibVLCOptions();
             return new LibVLC(options.ToArray());
         }
 
@@ -36,14 +29,8 @@ namespace ModernMusicPlayer.Services
                 $"--file-caching={BufferSize}",   // File caching buffer size
                 "--audio-resampler=soxr",         // High quality audio resampler
                 "--clock-jitter=0",               // Minimize clock jitter
-                "--clock-synchro=0"               // Disable clock synchro for smoother playback
+                "--clock-synchro=0"              // Disable clock synchro for smoother playback
             };
-
-            // Add platform-specific options
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                options.Add("--aout=mmdevice");   // Use modern audio output on Windows only
-            }
 
             return options;
         }

@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ModernMusicPlayer.Commands;
+using ModernMusicPlayer.Common;
 using ModernMusicPlayer.Entities;
 using ModernMusicPlayer.Repositories;
 using ReactiveUI;

@@ -24,14 +24,12 @@ namespace ModernMusicPlayer
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && ServiceProvider != null)
             {
-                // Get required services
                 var dbContext = ServiceProvider.GetRequiredService<MusicPlayerDbContext>();
                 var trackRepository = ServiceProvider.GetRequiredService<ITrackRepository>();
                 var tagRepository = ServiceProvider.GetRequiredService<ITagRepository>();
                 var audioPlayer = ServiceProvider.GetRequiredService<AudioPlayerService>();
                 var sessionService = ServiceProvider.GetRequiredService<ISessionService>();
 
-                // Create main view model with dependencies
                 var mainViewModel = new MainViewModel(
                     audioPlayer,
                     trackRepository,
@@ -39,13 +37,11 @@ namespace ModernMusicPlayer
                     sessionService
                 );
 
-                // Create and configure main window
                 desktop.MainWindow = new MainWindow
                 {
                     DataContext = mainViewModel
                 };
 
-                // Handle application shutdown
                 desktop.Exit += async (s, e) =>
                 {
                     mainViewModel?.Dispose();
