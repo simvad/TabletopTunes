@@ -1,7 +1,7 @@
 using System.Linq;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Entities;
 
-namespace ModernMusicPlayer.Common
+namespace TabletopTunes.Common
 {
     public static class TrackQueryExtensions
     {
@@ -13,3 +13,4 @@ namespace ModernMusicPlayer.Common
         }
     }
 }
+    

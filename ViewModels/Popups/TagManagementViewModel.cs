@@ -3,12 +3,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ModernMusicPlayer.Common;
-using ModernMusicPlayer.Entities;
-using ModernMusicPlayer.Repositories;
+using TabletopTunes.Common;
+using TabletopTunes.Entities;
+using TabletopTunes.Repositories;
 using ReactiveUI;
 
-namespace ModernMusicPlayer.ViewModels
+namespace TabletopTunes.ViewModels
 {
     public class TagManagementViewModel : ReactiveObject
     {

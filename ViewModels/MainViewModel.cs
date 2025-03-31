@@ -2,14 +2,14 @@ using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using System.Threading.Tasks;
-using ModernMusicPlayer.Services;
-using ModernMusicPlayer.Repositories;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Services;
+using TabletopTunes.Repositories;
+using TabletopTunes.Entities;
 using ReactiveUI;
 using System.Reactive.Linq;
 using System.Reactive.Disposables;
 
-namespace ModernMusicPlayer.ViewModels
+namespace TabletopTunes.ViewModels
 {
     public class MainViewModel : ReactiveObject, IDisposable
     {

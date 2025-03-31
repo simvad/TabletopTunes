@@ -3,7 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     public class SessionHub : Hub
     {

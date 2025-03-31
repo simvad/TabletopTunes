@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using LibVLCSharp.Shared;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     internal class AudioPlayerEventHandler
     {

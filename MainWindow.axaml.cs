@@ -2,11 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using ModernMusicPlayer.Services;
-using ModernMusicPlayer.Repositories;
-using ModernMusicPlayer.ViewModels;
+using TabletopTunes.Services;
+using TabletopTunes.Repositories;
+using TabletopTunes.ViewModels;
 
-namespace ModernMusicPlayer
+namespace TabletopTunes
 {
     public partial class MainWindow : Window
     {

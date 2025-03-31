@@ -12,11 +12,11 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Avalonia.ReactiveUI;
 using Avalonia.VisualTree;
-using ModernMusicPlayer.Services;
-using ModernMusicPlayer.ViewModels;
+using TabletopTunes.Services;
+using TabletopTunes.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ModernMusicPlayer.Views.Controls
+namespace TabletopTunes.Views.Controls
 {
     public partial class SessionControlPanel : UserControl, IDisposable
     {

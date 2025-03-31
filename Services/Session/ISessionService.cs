@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     public interface ISessionService
     {

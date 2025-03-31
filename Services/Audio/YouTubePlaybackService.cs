@@ -8,7 +8,7 @@ using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 using System.Net;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     internal class YouTubePlaybackService
     {

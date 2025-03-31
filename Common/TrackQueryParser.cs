@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Collections.Generic;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Entities;
 
-namespace ModernMusicPlayer.Common
+namespace TabletopTunes.Common
 {
     public class TrackQueryParser
     {

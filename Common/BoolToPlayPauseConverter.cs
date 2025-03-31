@@ -2,7 +2,7 @@ using Avalonia.Data.Converters;
 using System;
 using System.Globalization;
 
-namespace ModernMusicPlayer.Common
+namespace TabletopTunes.Common
 {
     public class BoolToPlayPauseConverter : IValueConverter
     {

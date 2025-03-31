@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using ModernMusicPlayer.ViewModels;
+using TabletopTunes.ViewModels;
 
-namespace ModernMusicPlayer.Views.Controls
+namespace TabletopTunes.Views.Controls
 {
     public partial class PlayerControlsControl : UserControl
     {

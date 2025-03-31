@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using LibVLCSharp.Shared;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     internal static class AudioPlayerConfiguration
     {

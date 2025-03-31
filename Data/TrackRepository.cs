@@ -2,11 +2,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using ModernMusicPlayer.Data;
-using ModernMusicPlayer.Entities;
-using ModernMusicPlayer.Common;
+using TabletopTunes.Data;
+using TabletopTunes.Entities;
+using TabletopTunes.Common;
 
-namespace ModernMusicPlayer.Repositories
+namespace TabletopTunes.Repositories
 {
     public class TrackRepository : ITrackRepository
     {

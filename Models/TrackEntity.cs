@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ModernMusicPlayer.Entities
+namespace TabletopTunes.Entities
 {
     public class TrackEntity
     {

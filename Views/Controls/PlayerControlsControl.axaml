@@ -2,9 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:ModernMusicPlayer.ViewModels"
+             xmlns:vm="clr-namespace:TabletopTunes.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="80"
-             x:Class="ModernMusicPlayer.Views.Controls.PlayerControlsControl"
+             x:Class="TabletopTunes.Views.Controls.PlayerControlsControl"
              x:DataType="vm:PlaybackViewModel">
 
     <Grid Background="{StaticResource SecondaryBackground}"

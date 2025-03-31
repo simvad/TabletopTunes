@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using ModernMusicPlayer.Entities;
-using ModernMusicPlayer.Common;
+using TabletopTunes.Entities;
+using TabletopTunes.Common;
 using ReactiveUI;
 
-namespace ModernMusicPlayer.ViewModels
+namespace TabletopTunes.ViewModels
 {
     public class SearchViewModel : ReactiveObject
     {

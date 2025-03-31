@@ -1,6 +1,6 @@
 using System;
 
-namespace ModernMusicPlayer.Common
+namespace TabletopTunes.Common
 {
     public class QueryToken
     {

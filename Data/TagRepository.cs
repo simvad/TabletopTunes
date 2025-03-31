@@ -3,10 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using ModernMusicPlayer.Data;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Data;
+using TabletopTunes.Entities;
 
-namespace ModernMusicPlayer.Repositories
+namespace TabletopTunes.Repositories
 {
     public class TagRepository : ITagRepository
     {

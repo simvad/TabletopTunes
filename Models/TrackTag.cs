@@ -1,4 +1,4 @@
-namespace ModernMusicPlayer.Entities
+namespace TabletopTunes.Entities
 {
     public class TrackTag
     {

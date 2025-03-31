@@ -4,12 +4,12 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using ModernMusicPlayer.Data;
-using ModernMusicPlayer.Repositories;
-using ModernMusicPlayer.Services;
-using ModernMusicPlayer.ViewModels;
+using TabletopTunes.Data;
+using TabletopTunes.Repositories;
+using TabletopTunes.Services;
+using TabletopTunes.ViewModels;
 
-namespace ModernMusicPlayer
+namespace TabletopTunes
 {
     public partial class App : Application
     {

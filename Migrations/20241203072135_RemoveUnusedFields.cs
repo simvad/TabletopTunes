@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace ModernMusicPlayer.Migrations
+namespace TabletopTunes.Migrations
 {
     /// <inheritdoc />
     public partial class RemoveUnusedFields : Migration

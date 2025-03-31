@@ -1,6 +1,6 @@
 using System;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     public class SessionConfiguration
     {

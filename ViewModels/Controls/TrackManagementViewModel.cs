@@ -3,13 +3,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ModernMusicPlayer.Common;
-using ModernMusicPlayer.Entities;
-using ModernMusicPlayer.Repositories;
-using ModernMusicPlayer.Services;
+using TabletopTunes.Common;
+using TabletopTunes.Entities;
+using TabletopTunes.Repositories;
+using TabletopTunes.Services;
 using ReactiveUI;
 
-namespace ModernMusicPlayer.ViewModels
+namespace TabletopTunes.ViewModels
 {
     public class TrackManagementViewModel : ReactiveObject
     {

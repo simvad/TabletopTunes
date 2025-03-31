@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Entities;
 
-namespace ModernMusicPlayer.Data
+namespace TabletopTunes.Data
 {
     public class MusicPlayerDbContext : DbContext
     {
@@ -17,7 +17,7 @@ namespace ModernMusicPlayer.Data
         {
             var folder = Environment.SpecialFolder.LocalApplicationData;
             var path = Environment.GetFolderPath(folder);
-            DbPath = System.IO.Path.Join(path, "ModernMusicPlayer", "musicplayer.db");
+            DbPath = System.IO.Path.Join(path, "TabletopTunes", "musicplayer.db");
             
             Directory.CreateDirectory(System.IO.Path.GetDirectoryName(DbPath)!);
         }

@@ -4,9 +4,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
-using ModernMusicPlayer.Data;
-using ModernMusicPlayer.Repositories;
-using ModernMusicPlayer.Services;
+using TabletopTunes.Data;
+using TabletopTunes.Repositories;
+using TabletopTunes.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ using Microsoft.Extensions.Hosting;
 using System.Net.Sockets;
 using System.Net;
 
-namespace ModernMusicPlayer
+namespace TabletopTunes
 {
     class Program
     {

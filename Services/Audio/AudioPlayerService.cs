@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using LibVLCSharp.Shared;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     public class AudioPlayerService : IAudioPlayerService
     {

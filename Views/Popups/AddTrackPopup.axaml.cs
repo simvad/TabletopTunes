@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace ModernMusicPlayer.Views.Popups
+namespace TabletopTunes.Views.Popups
 {
     public partial class AddTrackPopup : UserControl
     {

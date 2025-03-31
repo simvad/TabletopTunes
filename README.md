@@ -33,8 +33,8 @@ dotnet ef database update
 ```
 
 The database will be created in:
-- Linux: `~/.local/share/ModernMusicPlayer/musicplayer.db`
-- Windows: `%LOCALAPPDATA%\ModernMusicPlayer\musicplayer.db`
+- Linux: `~/.local/share/TabletopTunes/musicplayer.db`
+- Windows: `%LOCALAPPDATA%\TabletopTunes\musicplayer.db`
 
 ## Session Hub Configuration
 

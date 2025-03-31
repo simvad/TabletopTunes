@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using ModernMusicPlayer.Entities;
+using TabletopTunes.Entities;
 
-namespace ModernMusicPlayer.Repositories
+namespace TabletopTunes.Repositories
 {
     public interface ITrackRepository
     {

@@ -1,6 +1,6 @@
 using ReactiveUI;
 
-namespace ModernMusicPlayer.ViewModels
+namespace TabletopTunes.ViewModels
 {
     public class TagViewModel : ReactiveObject
     {

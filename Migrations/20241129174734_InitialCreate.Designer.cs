@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ModernMusicPlayer.Data;
+using TabletopTunes.Data;
 
 #nullable disable
 
-namespace ModernMusicPlayer.Migrations
+namespace TabletopTunes.Migrations
 {
     [DbContext(typeof(MusicPlayerDbContext))]
     [Migration("20241129174734_InitialCreate")]
@@ -20,7 +20,7 @@ namespace ModernMusicPlayer.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.Tag", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -44,7 +44,7 @@ namespace ModernMusicPlayer.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.TrackEntity", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.TrackEntity", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -74,7 +74,7 @@ namespace ModernMusicPlayer.Migrations
                     b.ToTable("Tracks");
                 });
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.TrackTag", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.TrackTag", b =>
                 {
                     b.Property<string>("TrackId")
                         .HasColumnType("TEXT");
@@ -92,15 +92,15 @@ namespace ModernMusicPlayer.Migrations
                     b.ToTable("TrackTags");
                 });
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.TrackTag", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.TrackTag", b =>
                 {
-                    b.HasOne("ModernMusicPlayer.Entities.Tag", "Tag")
+                    b.HasOne("TabletopTunes.Entities.Tag", "Tag")
                         .WithMany("TrackTags")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ModernMusicPlayer.Entities.TrackEntity", "Track")
+                    b.HasOne("TabletopTunes.Entities.TrackEntity", "Track")
                         .WithMany("TrackTags")
                         .HasForeignKey("TrackId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -111,12 +111,12 @@ namespace ModernMusicPlayer.Migrations
                     b.Navigation("Track");
                 });
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.Tag", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.Tag", b =>
                 {
                     b.Navigation("TrackTags");
                 });
 
-            modelBuilder.Entity("ModernMusicPlayer.Entities.TrackEntity", b =>
+            modelBuilder.Entity("TabletopTunes.Entities.TrackEntity", b =>
                 {
                     b.Navigation("TrackTags");
                 });

@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Input;
 
-namespace ModernMusicPlayer.Common
+namespace TabletopTunes.Common
 {
     public class RelayCommand : ICommand
     {

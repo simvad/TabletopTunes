@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Reactive.Subjects;
 
-namespace ModernMusicPlayer.Services
+namespace TabletopTunes.Services
 {
     public class SessionService : ISessionService, IAsyncDisposable
     {
