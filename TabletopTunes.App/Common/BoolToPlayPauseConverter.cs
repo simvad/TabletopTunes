@@ -10,9 +10,9 @@ namespace TabletopTunes.App.Common
         {
             if (value is bool isPlaying)
             {
-                return isPlaying ? "⏸️" : "▶️";
+                return isPlaying ? "⏸" : "▶";
             }
-            return "▶️";
+            return "▶";
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

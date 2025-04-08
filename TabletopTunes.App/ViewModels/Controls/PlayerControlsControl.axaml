@@ -36,7 +36,10 @@
                         Content="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseConverter}}"
                         Width="40"
                         Height="40"
-                        Margin="0,0,10,0"/>
+                        Margin="0,0,10,0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        FontSize="20"/>
                 
                 <!-- Progress Slider -->
                 <Slider Grid.Column="2"
