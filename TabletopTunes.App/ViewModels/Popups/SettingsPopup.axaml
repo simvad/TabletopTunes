@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:TabletopTunes.App.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="150"
+             x:Class="TabletopTunes.App.Views.Popups.SettingsPopup"
+             x:DataType="vm:PlaybackViewModel">
+
+    <Border Background="{StaticResource SecondaryBackground}" 
+            Padding="20" 
+            CornerRadius="10">
+        <StackPanel>
+            <TextBlock Text="Settings" 
+                      Margin="0,0,0,10"
+                      FontSize="18"
+                      FontWeight="Bold"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                <TextBlock Text="Fade Length (sec): " 
+                          VerticalAlignment="Center"/>
+                <NumericUpDown Value="{Binding FadeLength}"
+                              Minimum="0"
+                              Maximum="10"
+                              Increment="0.5"
+                              Width="100"/>
+            </StackPanel>
+            <Button Content="Close" 
+                    Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).CloseSettingsCommand}"
+                    HorizontalAlignment="Right"/>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,114 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:TabletopTunes.App.ViewModels"
+        xmlns:controls="clr-namespace:TabletopTunes.App.Views.Controls"
+        xmlns:popups="clr-namespace:TabletopTunes.App.Views.Popups"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+        x:Class="TabletopTunes.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Width="800" Height="600"
+        Title="TabletopTunes">
+
+    <Window.Styles>
+        <Style>
+            <Style.Resources>
+                <SolidColorBrush x:Key="PrimaryBackground">#1E1E1E</SolidColorBrush>
+                <SolidColorBrush x:Key="SecondaryBackground">#2C2C2C</SolidColorBrush>
+                <SolidColorBrush x:Key="TextColor">White</SolidColorBrush>
+                <SolidColorBrush x:Key="AccentColor">#3A7CA5</SolidColorBrush>
+                <SolidColorBrush x:Key="HoverColor">#4A8CB5</SolidColorBrush>
+            </Style.Resources>
+        </Style>
+
+        <!-- Button Style -->
+        <Style Selector="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button:pointerover">
+            <Setter Property="Background" Value="{StaticResource HoverColor}"/>
+        </Style>
+
+        <!-- TextBox Style -->
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="{StaticResource SecondaryBackground}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto" Background="{StaticResource PrimaryBackground}">
+        <!-- Top Search Bar -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="10">
+            <controls:SearchBarControl Grid.Column="0"
+                                     DataContext="{Binding SearchViewModel}"/>
+            <Button Grid.Column="1"
+                    Margin="10,0,0,0"
+                    Command="{Binding OpenSessionPanelCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <PathIcon Data="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 8a6 6 0 1 1 12 0A6 6 0 0 1 6 8zm2 10a3 3 0 0 0-3 3 1 1 0 1 1-2 0 5 5 0 0 1 5-5h8a5 5 0 0 1 5 5 1 1 0 1 1-2 0 3 3 0 0 0-3-3H8z"/>
+                    <TextBlock Text="Session"/>
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Track Grid -->
+        <controls:TrackGridControl Grid.Row="1" 
+                                 Background="{StaticResource SecondaryBackground}"
+                                 Margin="0"
+                                 Padding="10"
+                                 DataContext="{Binding SearchViewModel}"/>
+
+        <!-- Bottom Player Controls -->
+        <controls:PlayerControlsControl Grid.Row="2" 
+                                      Background="{StaticResource SecondaryBackground}"
+                                      Height="80"
+                                      Margin="10"
+                                      DataContext="{Binding PlaybackViewModel}"/>
+
+        <!-- Floating Add Track Button -->
+        <Button Grid.Row="1" 
+                HorizontalAlignment="Right" 
+                VerticalAlignment="Bottom"
+                Margin="20"
+                Command="{Binding OpenAddTrackCommand}">
+            <TextBlock Text="+" 
+                      FontSize="24" 
+                      VerticalAlignment="Center"
+                      HorizontalAlignment="Center"/>
+        </Button>
+
+        <!-- Popup Overlays -->
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsSettingsOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:SettingsPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding}"/>
+        </Grid>
+
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsAddTrackOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:AddTrackPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding TrackManagementViewModel}"/>
+        </Grid>
+
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsEditTagsOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <popups:EditTagsPopup HorizontalAlignment="Center" 
+                                 VerticalAlignment="Center"
+                                 DataContext="{Binding TagManagementViewModel}"/>
+        </Grid>
+
+        <Grid Grid.Row="0" Grid.RowSpan="3" IsVisible="{Binding IsSessionPanelOpen}">
+            <Border Background="Black" Opacity="0.5"/>
+            <controls:SessionControlPanel HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"/>
+        </Grid>
+    </Grid>
+</Window>

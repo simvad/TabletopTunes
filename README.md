@@ -1,5 +1,14 @@
 # TabletopTunes
+
 A music player built with Avalonia UI that streams from YouTube URLs and organizes music with tags. Made specifically to catalogue and play mood music at the TTRPG table.
+
+## Project Structure
+
+TabletopTunes is organized into three main components:
+
+- **TabletopTunes.Core**: Contains domain models, repositories, and service interfaces
+- **TabletopTunes.Server**: Hosts the SignalR hub for synchronized playback
+- **TabletopTunes.App**: The desktop application with Avalonia UI
 
 ## Prerequisites
 
@@ -8,10 +17,12 @@ No additional prerequisites needed.
 
 ### Linux
 Install VLC, LibVLC development files, and PulseAudio:
+
 Ubuntu/Debian:
 ```bash
 sudo apt-get install vlc libvlc-dev pulseaudio
 ```
+
 Fedora:
 ```bash
 sudo dnf install vlc vlc-devel pulseaudio
@@ -21,7 +32,7 @@ Note: If you're using PipeWire instead of PulseAudio, the PulseAudio compatibili
 
 ## Setup
 
-1. Install .NET 7.0 SDK or later
+1. Install .NET 8.0 SDK
 2. Clone the repository
 3. Install Entity Framework Core tools:
 ```bash
@@ -29,12 +40,44 @@ dotnet tool install --global dotnet-ef
 ```
 4. Create the database:
 ```bash
+cd TabletopTunes.Core
 dotnet ef database update
 ```
 
 The database will be created in:
 - Linux: `~/.local/share/TabletopTunes/musicplayer.db`
 - Windows: `%LOCALAPPDATA%\TabletopTunes\musicplayer.db`
+
+## Running the Application
+
+The simplest way to run TabletopTunes is using the provided scripts:
+
+### Windows
+```batch
+# Run both server and app
+run.bat
+```
+
+### Linux/macOS
+```bash
+# Make the script executable (first time only)
+chmod +x run.sh
+
+# Run both server and app
+./run.sh
+```
+
+Both scripts perform the same functions but are optimized for their respective operating systems. They'll start the server in the background, wait for it to initialize, then launch the app. When you close the app, they'll automatically clean up the server process.
+
+Alternatively, you can run the components individually:
+
+```bash
+# Start the SignalR server first
+dotnet run --project TabletopTunes.Server
+
+# Then in another terminal, start the app
+dotnet run --project TabletopTunes.App
+```
 
 ## Session Hub Configuration
 
@@ -46,29 +89,21 @@ By default, the application runs in local development mode, which:
 - Handles all session management locally
 - Perfect for testing and development
 
-When you run `dotnet run` in local mode:
-1. The application starts a local SignalR hub server on port 5000
+When you run the application in local mode:
+1. The SignalR hub server starts on port 5000
 2. The main application window opens
 3. Multiple instances can be run for testing
 
 To test with multiple instances locally:
-1. Open a terminal and run the first instance:
+1. Run the server once: `dotnet run --project TabletopTunes.Server`
+2. Open additional terminals and run more app instances:
    ```bash
-   dotnet run
+   dotnet run --project TabletopTunes.App
    ```
-   This instance will start the SignalR hub server and the application.
-
-2. Open additional terminals and run more instances:
-   ```bash
-   dotnet run
-   ```
-   Each new instance will connect to the hub server started by the first instance.
-
 3. In one instance:
    - Click the "Session" button
    - Click "Host Session"
    - Note the session code that appears
-
 4. In other instances:
    - Click the "Session" button
    - Click "Join"
@@ -89,40 +124,13 @@ This means you can test synchronized playback on a single machine without audio 
 ### Azure Deployment Mode
 For production deployment, the session hub can be hosted on Azure:
 1. Deploy the SignalR hub to Azure
-2. Modify `Program.cs` to use the Azure configuration:
+2. Modify `Program.cs` in the App project to use the Azure configuration:
 ```csharp
 // Change this line in Program.cs
 var sessionConfig = SessionConfiguration.CreateAzureProduction("https://your-azure-url.com");
 ```
 
-When you run `dotnet run` in Azure mode:
-1. The application starts without launching a local server
-2. The main application window opens
-3. The application connects directly to your Azure-hosted hub
-4. Multiple instances across different machines can connect to the same Azure hub
-5. All session management is handled by the Azure service
-
-Benefits of Azure deployment:
-- Improved reliability and scalability
-- No need to run a local server
-- Better for production use
-- Enables synchronization across different networks
-
-Note: In Azure mode, make sure your Azure SignalR hub is running and accessible before starting the application.
-
-## Features
-- Stream music from YouTube URLs
-- Organize tracks with tags
-- Search by title or tags
-- Tag-based filtering with operators:
-  - Simple text search: "rock" (finds tracks with "rock" in title or tags)
-  - Tag search: "#rock" (only searches tags)
-  - Combined tags: "#rock & #alternative" (both tags must exist)
-  - OR operations: "#rock | #jazz" (either tag)
-  - NOT operations: "#rock & !#jazz" (rock but not jazz)
-- Synchronized playback across multiple instances using session hub
-  - Host a session and share the code
-  - Join existing sessions
-  - Synchronized play/pause and track changes
-  - Independent volume control per instance
-  - Automatic audio separation on Linux for local testing
+When you run the app in Azure mode:
+1. The application connects directly to your Azure-hosted hub
+2. Multiple instances across different machines can connect to the same Azure hub
+3. All session management is handled by the Azure service

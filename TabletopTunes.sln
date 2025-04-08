@@ -1,24 +1,40 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.5.002.0
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TabletopTunes", "TabletopTunes.csproj", "{ED6A37BC-B511-4EE3-A5C9-3B287AFD67DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabletopTunes.Core", "TabletopTunes.Core\TabletopTunes.Core.csproj", "{974F1C89-9903-4C59-A678-7CC619145820}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabletopTunes.Server", "TabletopTunes.Server\TabletopTunes.Server.csproj", "{2DB1585B-DA6D-455A-87E8-5D98012ABED2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabletopTunes.App", "TabletopTunes.App\TabletopTunes.App.csproj", "{46D3F663-2A07-454A-A335-FBDC00F2E116}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TabletopTunes.Tests", "TabletopTunes.Tests\TabletopTunes.Tests.csproj", "{41DF4A92-D2C4-45E6-A6B7-1E35CCB827B8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{ED6A37BC-B511-4EE3-A5C9-3B287AFD67DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ED6A37BC-B511-4EE3-A5C9-3B287AFD67DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ED6A37BC-B511-4EE3-A5C9-3B287AFD67DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ED6A37BC-B511-4EE3-A5C9-3B287AFD67DB}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {1396AAAA-80F9-4A30-AAB6-B2F8B26A93DB}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{974F1C89-9903-4C59-A678-7CC619145820}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{974F1C89-9903-4C59-A678-7CC619145820}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{974F1C89-9903-4C59-A678-7CC619145820}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{974F1C89-9903-4C59-A678-7CC619145820}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DB1585B-DA6D-455A-87E8-5D98012ABED2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DB1585B-DA6D-455A-87E8-5D98012ABED2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DB1585B-DA6D-455A-87E8-5D98012ABED2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DB1585B-DA6D-455A-87E8-5D98012ABED2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46D3F663-2A07-454A-A335-FBDC00F2E116}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46D3F663-2A07-454A-A335-FBDC00F2E116}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46D3F663-2A07-454A-A335-FBDC00F2E116}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46D3F663-2A07-454A-A335-FBDC00F2E116}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41DF4A92-D2C4-45E6-A6B7-1E35CCB827B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41DF4A92-D2C4-45E6-A6B7-1E35CCB827B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41DF4A92-D2C4-45E6-A6B7-1E35CCB827B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41DF4A92-D2C4-45E6-A6B7-1E35CCB827B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
