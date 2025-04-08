@@ -13,7 +13,7 @@ TabletopTunes is organized into three main components:
 ## Prerequisites
 
 ### Windows
-No additional prerequisites needed.
+Install VLC.
 
 ### Linux
 Install VLC, LibVLC development files, and PulseAudio:
@@ -28,7 +28,7 @@ Fedora:
 sudo dnf install vlc vlc-devel pulseaudio
 ```
 
-Note: If you're using PipeWire instead of PulseAudio, the PulseAudio compatibility layer will be used automatically.
+Note: If you're using PipeWire instead of PulseAudio, the PulseAudio compatibility layer shoul be used automatically.
 
 ## Setup
 
@@ -79,58 +79,81 @@ dotnet run --project TabletopTunes.Server
 dotnet run --project TabletopTunes.App
 ```
 
-## Session Hub Configuration
+## Deployment Options
 
-TabletopTunes supports two modes for the session hub server that enables synchronized playback:
+TabletopTunes uses a flexible configuration system that supports different deployment scenarios:
 
-### Local Development Mode
-By default, the application runs in local development mode, which:
-- Automatically starts a SignalR hub server on localhost:5000
+### Configuration System
+
+The application uses a robust configuration system with environment-specific settings:
+
+- **appsettings.json**: Default configuration for all environments
+- **appsettings.Development.json**: Settings for development environment
+- **appsettings.Production.json**: Settings for production/deployed environment
+
+You can configure server connections, database paths, and audio settings without modifying code.
+
+### Server Connection Modes
+
+TabletopTunes supports three modes for the session hub server:
+
+#### 1. Local Development Mode
+In development mode (default):
+- Automatically starts a SignalR hub server on a dynamically selected port
 - Handles all session management locally
-- Perfect for testing and development
+- Perfect for testing and development on a single machine
 
-When you run the application in local mode:
-1. The SignalR hub server starts on port 5000
-2. The main application window opens
-3. Multiple instances can be run for testing
+#### 2. Remote Server Mode
+For connecting to an existing server (cross-machine testing):
+- Connect to a server on another machine on your network
+- Use command-line arguments to specify the server URL:
+  ```bash
+  # Connect to a server on another machine
+  dotnet run --project TabletopTunes.App -- --server "http://192.168.1.100:5000"
+  ```
+- Or modify the Server:Url setting in appsettings.json
 
-To test with multiple instances locally:
-1. Run the server once: `dotnet run --project TabletopTunes.Server`
-2. Open additional terminals and run more app instances:
-   ```bash
-   dotnet run --project TabletopTunes.App
-   ```
-3. In one instance:
+#### 3. Production Deployment Mode
+For production deployment:
+- Deploy the server component separately
+- Configure clients to connect to the deployed server
+- When publishing the app as a single-file executable, it automatically uses production mode
+- No local server processes are started in published mode
+
+### Publishing for Windows
+
+To create a standalone Windows executable:
+
+```bash
+# Make the script executable (first time only)
+chmod +x publish-windows.sh
+
+# Run the publish script
+./publish-windows.sh
+```
+
+This creates a self-contained single-file executable at:
+`TabletopTunes.App/bin/Release/net9.0/win-x64/publish/TabletopTunes.App.exe`
+
+The published app:
+- Includes all dependencies (no .NET installation required)
+- Uses production configuration settings
+- Does not attempt to start a local server
+- Connects to the server URL specified in appsettings.Production.json
+- Stores its database in the user's AppData folder
+
+### Using Multiple Instances
+
+To test with multiple instances:
+
+1. Start one instance as the host:
    - Click the "Session" button
    - Click "Host Session"
    - Note the session code that appears
-4. In other instances:
+
+2. In other instances:
    - Click the "Session" button
    - Click "Join"
-   - Enter the session code from step 3
+   - Enter the session code from step 1
 
 All instances will now be synchronized, with the host controlling playback.
-
-#### Audio Separation on Linux
-When running multiple instances on Linux, TabletopTunes automatically handles audio separation:
-- Host instance uses the system's default audio output
-- Guest instances use dedicated virtual audio sinks
-- Each instance can have independent volume control
-- Virtual sinks are automatically created and cleaned up
-- Works with both PulseAudio and PipeWire
-
-This means you can test synchronized playback on a single machine without audio conflicts. Each instance's volume can be controlled independently through the system's audio settings or the application's volume control.
-
-### Azure Deployment Mode
-For production deployment, the session hub can be hosted on Azure:
-1. Deploy the SignalR hub to Azure
-2. Modify `Program.cs` in the App project to use the Azure configuration:
-```csharp
-// Change this line in Program.cs
-var sessionConfig = SessionConfiguration.CreateAzureProduction("https://your-azure-url.com");
-```
-
-When you run the app in Azure mode:
-1. The application connects directly to your Azure-hosted hub
-2. Multiple instances across different machines can connect to the same Azure hub
-3. All session management is handled by the Azure service
