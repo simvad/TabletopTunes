@@ -2,6 +2,10 @@
 
 A music player built with Avalonia UI that streams from YouTube URLs and organizes music with tags. Made specifically to catalogue and play mood music at the TTRPG table.
 
+## Debugging
+The app is developed on Linux but tested on Windows and should therefore work cross-platform, although errors might creep in on Windows. The most likely source of errors is a deprecated version of YoutubeExplode, since I'm not always on top of updating the package whenever YT makes a change.
+
+
 ## Project Structure
 
 TabletopTunes is organized into three main components:
